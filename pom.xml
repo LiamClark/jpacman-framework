@@ -70,11 +70,6 @@
 		<pmd.plugin.version>3.6</pmd.plugin.version>
 		<shade.plugin.version>2.4.3</shade.plugin.version>
 		<surefire.plugin.version>2.19.1</surefire.plugin.version>
-
-		<checkerframework.plugin.version>2.1.10</checkerframework.plugin.version>
-		<!-- IntelliJ will warn about this line, but the maven-dependency-plugin
-		     does correctly resolve this, so there is nothing to worry about. -->
-		<annotatedJdk>${org.checkerframework:jdk8:jar}</annotatedJdk>
 	</properties>
 
 	<dependencies>
@@ -150,25 +145,6 @@
 			<version>${cucumber.version}</version>
 			<scope>test</scope>
 		</dependency>
-
-		<!-- annotations from the Checker Framework: nullness, interning, locking, ... -->
-		<dependency>
-			<groupId>org.checkerframework</groupId>
-			<artifactId>checker-qual</artifactId>
-			<version>${checkerframework.plugin.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.checkerframework</groupId>
-			<artifactId>checker</artifactId>
-			<version>${checkerframework.plugin.version}</version>
-		</dependency>
-		<!-- The annotated JDK to use (change to jdk7 if using Java 7). -->
-		<dependency>
-			<groupId>org.checkerframework</groupId>
-			<artifactId>jdk8</artifactId>
-			<version>${checkerframework.plugin.version}</version>
-		</dependency>
-
 	</dependencies>
 
 	<build>
@@ -194,11 +170,7 @@
 					<source>${maven.compiler.source}</source>
 					<target>${maven.compiler.target}</target>
 					<fork>true</fork>
-					<annotationProcessors>
-						<annotationProcessor>org.checkerframework.checker.nullness.NullnessChecker</annotationProcessor>
-					</annotationProcessors>
 					<compilerArgs>
-						<arg>-Xbootclasspath/p:${annotatedJdk}</arg>
 						<arg>-AskipUses=^java</arg>
 						<arg>-AskipDefs=Test$|e2e</arg>
 						<arg>-AassumeAssertionsAreEnabled</arg>

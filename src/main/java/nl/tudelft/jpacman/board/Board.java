@@ -1,7 +1,5 @@
 package nl.tudelft.jpacman.board;
 
-import org.checkerframework.checker.initialization.qual.UnderInitialization;
-
 /**
  * A top-down view of a matrix of {@link Square}s.
  *
@@ -30,12 +28,8 @@ public class Board {
     /**
      * Whatever happens, the squares on the board can't be null.
      * @return false if any square on the board is null.
-     *
-     * This method uses Java 8's possibility to make the receiver ("this") explicit,
-     * so that it can be annotated for the Checker Framework to indicate that it
-     * is called from the constructor, i.e., that the object "this" is still in the making.
      */
-    protected final boolean invariant(@UnderInitialization(Board.class) Board this) {
+    protected final boolean invariant() {
         for (Square[] row : board) {
             for (Square square : row) {
                 if (square == null) {
