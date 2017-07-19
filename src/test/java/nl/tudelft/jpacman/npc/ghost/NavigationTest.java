@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 
+import io.vavr.control.Option;
 import nl.tudelft.jpacman.board.Board;
 import nl.tudelft.jpacman.board.BoardFactory;
 import nl.tudelft.jpacman.board.Direction;
@@ -54,9 +55,9 @@ class NavigationTest {
         Board b = parser.parseMap(Lists.newArrayList(" ")).getBoard();
         Square s1 = b.squareAt(0, 0);
         Square s2 = b.squareAt(0, 0);
-        List<Direction> path = Navigation
+        Option<List<Direction>> path = Navigation
             .shortestPath(s1, s2, mock(Unit.class));
-        assertThat(path).isEmpty();
+        assertThat(path.get()).isEmpty();
     }
 
     /**
@@ -69,9 +70,9 @@ class NavigationTest {
             .getBoard();
         Square s1 = b.squareAt(1, 1);
         Square s2 = b.squareAt(3, 1);
-        List<Direction> path = Navigation
+        Option<List<Direction>> path = Navigation
             .shortestPath(s1, s2, mock(Unit.class));
-        assertThat(path).isNull();
+        assertThat(path).isEmpty();
     }
 
     /**
@@ -84,8 +85,8 @@ class NavigationTest {
             .getBoard();
         Square s1 = b.squareAt(1, 1);
         Square s2 = b.squareAt(3, 1);
-        List<Direction> path = Navigation.shortestPath(s1, s2, null);
-        assertThat(path).containsExactly(Direction.EAST, Direction.EAST);
+        Option<List<Direction>> path = Navigation.shortestPath(s1, s2, null);
+        assertThat(path.get()).containsExactly(Direction.EAST, Direction.EAST);
     }
 
     /**
@@ -97,9 +98,9 @@ class NavigationTest {
             .getBoard();
         Square s1 = b.squareAt(1, 1);
         Square s2 = b.squareAt(2, 1);
-        List<Direction> path = Navigation
+        Option<List<Direction>> path = Navigation
             .shortestPath(s1, s2, mock(Unit.class));
-        assertThat(path).containsExactly(Direction.EAST);
+        assertThat(path.get()).containsExactly(Direction.EAST);
     }
 
     /**
@@ -111,9 +112,9 @@ class NavigationTest {
             Lists.newArrayList("####", "#  #", "## #", "####")).getBoard();
         Square s1 = b.squareAt(1, 1);
         Square s2 = b.squareAt(2, 2);
-        List<Direction> path = Navigation
+        Option<List<Direction>> path = Navigation
             .shortestPath(s1, s2, mock(Unit.class));
-        assertThat(path).containsExactly(Direction.EAST, Direction.SOUTH);
+        assertThat(path.get()).containsExactly(Direction.EAST, Direction.SOUTH);
     }
 
     /**
@@ -126,8 +127,8 @@ class NavigationTest {
             .getBoard();
         Square s1 = b.squareAt(1, 1);
         Square s2 = b.squareAt(2, 1);
-        Square result = Navigation.findNearest(Pellet.class, s1).getSquare();
-        assertThat(result).isEqualTo(s2);
+        Option<Square> result = Navigation.findNearest(Pellet.class, s1).map(Unit::getSquare);
+        assertThat(result.get()).isEqualTo(s2);
     }
 
     /**
@@ -137,8 +138,8 @@ class NavigationTest {
     void testNoNearestUnit() {
         Board b = parser.parseMap(Lists.newArrayList(" ")).getBoard();
         Square s1 = b.squareAt(0, 0);
-        Unit unit = Navigation.findNearest(Pellet.class, s1);
-        assertThat(unit).isNull();
+        Option<Unit> unit = Navigation.findNearest(Pellet.class, s1);
+        assertThat(unit).isEmpty();
     }
 
     /**
@@ -152,7 +153,7 @@ class NavigationTest {
         try (InputStream i = getClass().getResourceAsStream("/board.txt")) {
             Board b = parser.parseMap(i).getBoard();
             Square s1 = b.squareAt(1, 1);
-            Unit unit = Navigation.findNearest(Ghost.class, s1);
+            Option<Unit> unit = Navigation.findNearest(Ghost.class, s1);
             assertThat(unit).isNotNull();
         }
     }

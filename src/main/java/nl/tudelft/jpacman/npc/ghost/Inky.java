@@ -3,6 +3,10 @@ package nl.tudelft.jpacman.npc.ghost;
 import java.util.List;
 import java.util.Map;
 
+import io.vavr.Function2;
+import io.vavr.collection.Stream;
+import io.vavr.collection.Vector;
+import io.vavr.control.Option;
 import nl.tudelft.jpacman.board.Direction;
 import nl.tudelft.jpacman.board.Square;
 import nl.tudelft.jpacman.board.Unit;
@@ -96,41 +100,33 @@ public class Inky extends Ghost {
     public Direction nextMove() {
         assert hasSquare();
 
-        Unit blinky = Navigation.findNearest(Blinky.class, getSquare());
-        if (blinky == null) {
-            return randomMove();
-        }
+        Option<Square> blinkyLocation = Navigation.findNearest(Blinky.class, getSquare())
+            .map(Unit::getSquare);
+        Option<Unit> player = Navigation.findNearest(Player.class, getSquare());
 
-        Unit player = Navigation.findNearest(Player.class, getSquare());
-        if (player == null) {
-            return randomMove();
-        }
-        assert player.hasSquare();
+        return player.flatMap(p -> {
+            Direction targetDirection = p.getDirection();
+            Square playerDestination = p.getSquare();
 
-        Direction targetDirection = player.getDirection();
-        Square playerDestination = player.getSquare();
-        for (int i = 0; i < SQUARES_AHEAD; i++) {
-            playerDestination = playerDestination.getSquareAt(targetDirection);
-        }
+            Square finalDestination = Stream.continually(targetDirection)
+                .take(SQUARES_AHEAD)
+                .foldRight(playerDestination, (direction, sq) -> sq.getSquareAt(direction));
 
-        Square destination = playerDestination;
-        List<Direction> firstHalf = Navigation.shortestPath(blinky.getSquare(),
-            playerDestination, null);
-        if (firstHalf == null) {
-            return randomMove();
-        }
+            return blinkyLocation.flatMap(b -> Navigation.shortestPath(b, finalDestination, null))
+                .map(dirs -> Stream.ofAll(dirs).foldRight(playerDestination, (direction, sq) -> sq.getSquareAt(direction)))
+                .flatMap(dest -> (Navigation.shortestPath(getSquare(), dest, this)))
+                .map(Vector::ofAll)
+                .flatMap(Vector::headOption);
 
-        for (Direction d : firstHalf) {
-            destination = playerDestination.getSquareAt(d);
-        }
-
-        List<Direction> path = Navigation.shortestPath(getSquare(),
-            destination, this);
-        if (path != null && !path.isEmpty()) {
-            return path.get(0);
-        }
-        return randomMove();
+        }).getOrElse(randomMove());
     }
     // CHECKSTYLE:ON
 
+    public static <A, B, U> Option<U> lift2(Option<A> a, Option<B> b, Function2<A,B, U> both) {
+        return a.flatMap(a1 -> b.map(b1 -> both.apply(a1, b1)));
+    }
+
+    public static <A, B, U> Option<U> bind2(Option<A> a, Option<B> b, Function2<A,B, Option<U>> both) {
+        return a.flatMap(a1 -> b.flatMap(b1 -> both.apply(a1, b1)));
+    }
 }

@@ -3,6 +3,8 @@ package nl.tudelft.jpacman.npc.ghost;
 import java.util.List;
 import java.util.Map;
 
+import io.vavr.collection.Stream;
+import io.vavr.control.Option;
 import nl.tudelft.jpacman.board.Direction;
 import nl.tudelft.jpacman.board.Square;
 import nl.tudelft.jpacman.board.Unit;
@@ -89,22 +91,17 @@ public class Pinky extends Ghost {
     public Direction nextMove() {
         assert hasSquare();
 
-        Unit player = Navigation.findNearest(Player.class, getSquare());
-        if (player == null) {
-            return randomMove();
-        }
-        assert player.hasSquare();
+        return Navigation.findNearest(Player.class, getSquare())
+            .flatMap(player -> {
+                Direction targetDirection = player.getDirection();
+                Square destination = player.getSquare();
 
-        Direction targetDirection = player.getDirection();
-        Square destination = player.getSquare();
-        for (int i = 0; i < SQUARES_AHEAD; i++) {
-            destination = destination.getSquareAt(targetDirection);
-        }
+                Square finalDestination = Stream.continually(targetDirection)
+                    .take(SQUARES_AHEAD)
+                    .foldRight(destination, (direction, sq) -> sq.getSquareAt(direction));
 
-        List<Direction> path = Navigation.shortestPath(getSquare(), destination, this);
-        if (path != null && !path.isEmpty()) {
-            return path.get(0);
-        }
-        return randomMove();
+                Option<List<Direction>> path = Navigation.shortestPath(getSquare(), finalDestination, this);
+                return path.map(Stream::ofAll).flatMap(Stream::headOption);
+            }).getOrElse(randomMove());
     }
 }

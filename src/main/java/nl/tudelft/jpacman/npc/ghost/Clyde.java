@@ -3,7 +3,10 @@ package nl.tudelft.jpacman.npc.ghost;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Predicate;
 
+import io.vavr.collection.Stream;
+import io.vavr.control.Option;
 import nl.tudelft.jpacman.board.Direction;
 import nl.tudelft.jpacman.board.Square;
 import nl.tudelft.jpacman.board.Unit;
@@ -99,21 +102,16 @@ public class Clyde extends Ghost {
     public Direction nextMove() {
         assert hasSquare();
 
-        Unit nearest = Navigation.findNearest(Player.class, getSquare());
-        if (nearest == null) {
-            return randomMove();
-        }
-        assert nearest.hasSquare();
-        Square target = nearest.getSquare();
-
-        List<Direction> path = Navigation.shortestPath(getSquare(), target, this);
-        if (path != null && !path.isEmpty()) {
-            Direction direction = path.get(0);
-            if (path.size() <= SHYNESS) {
-                return OPPOSITES.get(direction);
-            }
-            return direction;
-        }
-        return randomMove();
+        return Navigation.findNearest(Player.class, getSquare())
+            .map(Unit::getSquare)
+            .flatMap(target -> Navigation.shortestPath(getSquare(), target, this))
+            .map(Stream::ofAll)
+            .flatMap(path -> {
+                Option<Direction> direction = path.headOption();
+                if (path.size() <= SHYNESS) {
+                    return direction.map(OPPOSITES::get);
+                }
+                return direction;
+            }).getOrElse(randomMove());
     }
 }

@@ -5,6 +5,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import io.vavr.collection.Stream;
+import io.vavr.control.Option;
 import nl.tudelft.jpacman.board.Direction;
 import nl.tudelft.jpacman.board.Square;
 import nl.tudelft.jpacman.board.Unit;
@@ -38,9 +40,9 @@ public final class Navigation {
      *         such path could be found. When the destination is the current
      *         square, an empty list is returned.
      */
-    public static List<Direction> shortestPath(Square from, Square to, Unit traveller) {
+    public static Option<List<Direction>> shortestPath(Square from, Square to, Unit traveller) {
         if (from.equals(to)) {
-            return new ArrayList<>();
+            return Option.of(new ArrayList<>());
         }
 
         List<Node> targets = new ArrayList<>();
@@ -50,12 +52,12 @@ public final class Navigation {
             Node node = targets.remove(0);
             Square square = node.getSquare();
             if (square.equals(to)) {
-                return node.getPath();
+                return Option.of(node.getPath());
             }
             visited.add(square);
             addNewTargets(traveller, targets, visited, node, square);
         }
-        return null;
+        return Option.none();
     }
 
     private static void addNewTargets(Unit traveller, List<Node> targets,
@@ -81,7 +83,7 @@ public final class Navigation {
      * @return The nearest unit of the given type, or <code>null</code> if no
      *         such unit could be found.
      */
-    public static Unit findNearest(Class<? extends Unit> type,
+    public static Option<Unit> findNearest(Class<? extends Unit> type,
                                              Square currentLocation) {
         List<Square> toDo = new ArrayList<>();
         Set<Square> visited = new HashSet<>();
@@ -90,20 +92,16 @@ public final class Navigation {
 
         while (!toDo.isEmpty()) {
             Square square = toDo.remove(0);
-            Unit unit = findUnit(type, square);
-            if (unit != null) {
-                assert unit.hasSquare();
+            Option<Unit> unit = findUnit(type, square);
+            if (unit.isDefined()) {
                 return unit;
             }
             visited.add(square);
-            for (Direction direction : Direction.values()) {
-                Square newTarget = square.getSquareAt(direction);
-                if (!visited.contains(newTarget) && !toDo.contains(newTarget)) {
-                    toDo.add(newTarget);
-                }
-            }
+            Stream.of(Direction.values()).map(square::getSquareAt)
+                .filter(newTarget -> !visited.contains(newTarget) && !toDo.contains(newTarget))
+                .forEach(toDo::add);
         }
-        return null;
+        return Option.none();
     }
 
     /**
@@ -116,14 +114,8 @@ public final class Navigation {
      * @return A unit of type T, iff such a unit occupies this square, or
      *         <code>null</code> of none does.
      */
-    public static Unit findUnit(Class<? extends Unit> type, Square square) {
-        for (Unit unit : square.getOccupants()) {
-            if (type.isInstance(unit)) {
-                assert unit.hasSquare();
-                return unit;
-            }
-        }
-        return null;
+    public static Option<Unit> findUnit(Class<? extends Unit> type, Square square) {
+        return Stream.ofAll(square.getOccupants()).find(type::isInstance);
     }
 
     /**

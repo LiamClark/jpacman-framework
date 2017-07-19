@@ -3,6 +3,8 @@ package nl.tudelft.jpacman.npc.ghost;
 import java.util.List;
 import java.util.Map;
 
+import io.vavr.collection.Stream;
+import io.vavr.control.Option;
 import nl.tudelft.jpacman.board.Direction;
 import nl.tudelft.jpacman.board.Square;
 import nl.tudelft.jpacman.board.Unit;
@@ -82,17 +84,10 @@ public class Blinky extends Ghost {
 
         // TODO Blinky should patrol his corner every once in a while
         // TODO Implement his actual behaviour instead of simply chasing.
-        Unit nearest = Navigation.findNearest(Player.class, getSquare());
-        if (nearest == null) {
-            return randomMove();
-        }
-        assert nearest.hasSquare();
-        Square target = nearest.getSquare();
-
-        List<Direction> path = Navigation.shortestPath(getSquare(), target, this);
-        if (path != null && !path.isEmpty()) {
-            return path.get(0);
-        }
-        return randomMove();
+        return Navigation.findNearest(Player.class, getSquare())
+            .map(Unit::getSquare)
+            .flatMap(target -> Navigation.shortestPath(getSquare(), target, this))
+            .map(Stream::ofAll)
+            .flatMap(Stream::headOption).getOrElse(randomMove());
     }
 }
