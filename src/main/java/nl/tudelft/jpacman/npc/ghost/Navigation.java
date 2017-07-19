@@ -2,9 +2,9 @@ package nl.tudelft.jpacman.npc.ghost;
 
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
+import io.vavr.collection.List;
 import io.vavr.collection.Stream;
 import io.vavr.control.Option;
 import nl.tudelft.jpacman.board.Direction;
@@ -14,7 +14,7 @@ import nl.tudelft.jpacman.board.Unit;
 /**
  * Navigation provides utility to nagivate on {@link Square}s.
  *
- * @author Jeroen Roosen 
+ * @author Jeroen Roosen
  */
 public final class Navigation {
 
@@ -42,10 +42,10 @@ public final class Navigation {
      */
     public static Option<List<Direction>> shortestPath(Square from, Square to, Unit traveller) {
         if (from.equals(to)) {
-            return Option.of(new ArrayList<>());
+            return Option.of(List.empty());
         }
 
-        List<Node> targets = new ArrayList<>();
+        ArrayList<Node> targets = new ArrayList<>();
         Set<Square> visited = new HashSet<>();
         targets.add(new Node(null, from, null));
         while (!targets.isEmpty()) {
@@ -60,7 +60,7 @@ public final class Navigation {
         return Option.none();
     }
 
-    private static void addNewTargets(Unit traveller, List<Node> targets,
+    private static void addNewTargets(Unit traveller, ArrayList<Node> targets,
                                       Set<Square> visited, Node node, Square square) {
         for (Direction direction : Direction.values()) {
             Square target = square.getSquareAt(direction);
@@ -85,7 +85,7 @@ public final class Navigation {
      */
     public static Option<Unit> findNearest(Class<? extends Unit> type,
                                              Square currentLocation) {
-        List<Square> toDo = new ArrayList<>();
+        ArrayList<Square> toDo = new ArrayList<>();
         Set<Square> visited = new HashSet<>();
 
         toDo.add(currentLocation);
@@ -188,12 +188,10 @@ public final class Navigation {
          * @return The list of values from the root of the tree to this node.
          */
         private List<Direction> getPath() {
-            if (parent == null) {
-                return new ArrayList<>();
-            }
-            List<Direction> path = parent.getPath();
-            path.add(getDirection());
-            return path;
+            return Option.of(parent)
+                .map(Node::getPath)
+                .map(dirs -> dirs.append(getDirection()))
+                .getOrElse(List::empty);
         }
     }
 }
