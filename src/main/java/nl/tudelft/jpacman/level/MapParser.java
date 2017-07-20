@@ -5,6 +5,7 @@ import io.vavr.Function1;
 import io.vavr.Function3;
 import io.vavr.Tuple3;
 import io.vavr.collection.List;
+import io.vavr.collection.Map;
 import io.vavr.control.Try;
 import nl.tudelft.jpacman.PacmanConfigurationException;
 import nl.tudelft.jpacman.board.Board;
@@ -29,7 +30,7 @@ public interface MapParser<T> extends Function1<T, Try<Level>> {
                     List<Tuple3<Character, Integer, Integer>> indexedChars = chars.map(List::zipWithIndex).zipWithIndex()
                         .flatMap(cs -> cs._1.map(c -> new Tuple3<>(c._1, cs._2, c._2)));
 
-                    List<Tuple3<NPC, Integer, Integer>> ghosts = indexedChars.filter(c -> c._1 == 'G')
+                    List<Tuple3<NPC, Integer, Integer>> ghosts = indexedChars.filter(a -> a._1 == 'G')
                         .map(ghost -> ghost.map1(g -> levelFactory.createGhost()));
 
                     ghosts.forEach(ghost -> ghost._1.occupy(squares.get(ghost._2).get(ghost._3)));
@@ -55,19 +56,12 @@ public interface MapParser<T> extends Function1<T, Try<Level>> {
                 levelCreator.createPellet().occupy(pelletSquare);
                 return pelletSquare;
             case 'G':
-                return makeGhostSquare(boardCreator, levelCreator);
+                return boardCreator.createGround();
             case 'P':
                 return boardCreator.createGround();
             default:
                 throw new PacmanConfigurationException("Invalid character:" + c);
         }
-    }
-
-    static Square makeGhostSquare(BoardFactory boardCreator, LevelFactory levelCreator) {
-        Square ghostSquare = boardCreator.createGround();
-        NPC ghost = levelCreator.createGhost();
-        ghost.occupy(ghostSquare);
-        return ghostSquare;
     }
 
     static Function1<List<String>, Try<Level>> listMapParser(MapParser<List<List<Character>>> defaultParser) {
