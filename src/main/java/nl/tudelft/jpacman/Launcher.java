@@ -9,7 +9,7 @@ import io.vavr.control.Try;
 import nl.tudelft.jpacman.board.BoardFactory;
 import nl.tudelft.jpacman.board.Direction;
 import nl.tudelft.jpacman.game.Game;
-import nl.tudelft.jpacman.game.GameFactory;
+import nl.tudelft.jpacman.game.SinglePlayerGame;
 import nl.tudelft.jpacman.level.Level;
 import nl.tudelft.jpacman.level.LevelFactory;
 import nl.tudelft.jpacman.level.MapParser;
@@ -72,9 +72,8 @@ public class Launcher {
      * @return a new Game.
      */
     public Game makeGame() {
-        GameFactory gf = getGameFactory();
         Level level = makeLevel();
-        game = gf.createSinglePlayerGame(level);
+        game = new SinglePlayerGame(getPlayerFactory().createPacMan(), level);
         return game;
     }
 
@@ -125,13 +124,6 @@ public class Launcher {
      */
     protected GhostFactory getGhostFactory() {
         return new GhostFactory(getSpriteStore());
-    }
-
-    /**
-     * @return A new factory using the players from {@link #getPlayerFactory()}.
-     */
-    protected GameFactory getGameFactory() {
-        return new GameFactory(getPlayerFactory());
     }
 
     /**

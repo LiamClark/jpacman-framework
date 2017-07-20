@@ -32,7 +32,7 @@ public class SinglePlayerGame extends Game {
      * @param level
      *            The level.
      */
-    protected SinglePlayerGame(Player player, Level level) {
+    public SinglePlayerGame(Player player, Level level) {
         assert player != null;
         assert level != null;
 
