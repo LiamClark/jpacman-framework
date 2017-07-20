@@ -1,6 +1,7 @@
 package nl.tudelft.jpacman.board;
 
 import io.vavr.Function1;
+import io.vavr.Predicates;
 import io.vavr.collection.Array;
 import nl.tudelft.jpacman.level.Pellet;
 
@@ -92,7 +93,7 @@ public class Board {
     public int remainingPellets() {
         return board.flatMap(Function1.identity())
             .flatMap(Square::getOccupants)
-            .filter(u -> u instanceof Pellet)
+            .filter(Predicates.instanceOf(Pellet.class))
             .length();
     }
 }
