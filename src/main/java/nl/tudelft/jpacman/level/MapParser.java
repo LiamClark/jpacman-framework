@@ -5,7 +5,6 @@ import io.vavr.Function1;
 import io.vavr.Function3;
 import io.vavr.Tuple3;
 import io.vavr.collection.List;
-import io.vavr.collection.Map;
 import io.vavr.control.Try;
 import nl.tudelft.jpacman.PacmanConfigurationException;
 import nl.tudelft.jpacman.board.Board;

@@ -1,6 +1,8 @@
 package nl.tudelft.jpacman.board;
 
+import io.vavr.Function1;
 import io.vavr.collection.Array;
+import nl.tudelft.jpacman.level.Pellet;
 
 import java.util.Objects;
 
@@ -85,5 +87,12 @@ public class Board {
      */
     public boolean withinBorders(int x, int y) {
         return x >= 0 && x < getWidth() && y >= 0 && y < getHeight();
+    }
+
+    public int remainingPellets() {
+        return board.flatMap(Function1.identity())
+            .flatMap(Square::getOccupants)
+            .filter(u -> u instanceof Pellet)
+            .length();
     }
 }
