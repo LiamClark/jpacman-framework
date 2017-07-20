@@ -1,5 +1,6 @@
 package nl.tudelft.jpacman.board;
 
+import io.vavr.collection.Array;
 import nl.tudelft.jpacman.sprite.PacManSprites;
 import nl.tudelft.jpacman.sprite.Sprite;
 
@@ -35,7 +36,7 @@ public class BoardFactory {
      *            the square at position x,y.
      * @return A new board, wrapping a grid of connected cells.
      */
-    public Board createBoard(Square[][] grid) {
+    public Board createBoard(Array<Array<Square>> grid) {
         assert grid != null;
 
         Board board = new Board(grid);
@@ -44,11 +45,11 @@ public class BoardFactory {
         int height = board.getHeight();
         for (int x = 0; x < width; x++) {
             for (int y = 0; y < height; y++) {
-                Square square = grid[x][y];
+                Square square = board.squareAt(x, y);
                 for (Direction dir : Direction.values()) {
                     int dirX = (width + x + dir.getDeltaX()) % width;
                     int dirY = (height + y + dir.getDeltaY()) % height;
-                    Square neighbour = grid[dirX][dirY];
+                    Square neighbour = board.squareAt(dirX, dirY);
                     square.link(neighbour, dir);
                 }
             }

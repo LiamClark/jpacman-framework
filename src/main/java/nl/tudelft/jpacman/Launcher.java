@@ -4,6 +4,8 @@ import java.awt.event.KeyEvent;
 import java.io.IOException;
 import java.util.List;
 
+import io.vavr.Function1;
+import io.vavr.control.Try;
 import nl.tudelft.jpacman.board.BoardFactory;
 import nl.tudelft.jpacman.board.Direction;
 import nl.tudelft.jpacman.game.Game;
@@ -83,20 +85,16 @@ public class Launcher {
      * @return A new level.
      */
     public Level makeLevel() {
-        try {
-            return getMapParser().parseMap(getLevelMap());
-        } catch (IOException e) {
-            throw new PacmanConfigurationException(
-                    "Unable to create level, name = " + getLevelMap(), e);
-        }
+        return getMapParser().apply(getLevelMap()).getOrElseThrow((e) ->  new PacmanConfigurationException(
+                "Unable to create level, name = " + getLevelMap(), e));
     }
 
     /**
      * @return A new map parser object using the factories from
      *         {@link #getLevelFactory()} and {@link #getBoardFactory()}.
      */
-    protected MapParser getMapParser() {
-        return new MapParser(getLevelFactory(), getBoardFactory());
+    protected Function1<String, Try<Level>> getMapParser() {
+        return MapParser.resourceMapParser(MapParser.characterMapParser(getBoardFactory(), getLevelFactory()));
     }
 
     /**

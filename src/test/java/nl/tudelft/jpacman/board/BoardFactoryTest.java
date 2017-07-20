@@ -2,6 +2,8 @@ package nl.tudelft.jpacman.board;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
+
+import io.vavr.collection.Array;
 import nl.tudelft.jpacman.sprite.PacManSprites;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -43,7 +45,7 @@ class BoardFactoryTest {
      */
     @Test
     void worldIsRound() {
-        factory.createBoard(new Square[][]{{s1}});
+        factory.createBoard(Array.of(Array.of(s1)));
         assertThat(Arrays.stream(Direction.values()).map(s1::getSquareAt)).containsOnly(s1);
     }
 
@@ -52,7 +54,7 @@ class BoardFactoryTest {
      */
     @Test
     void connectedEast() {
-        factory.createBoard(new Square[][]{{s1}, {s2}});
+        factory.createBoard(Array.of(Array.of(s1), Array.of(s2)));
         assertThat(s1.getSquareAt(Direction.EAST)).isEqualTo(s2);
         assertThat(s2.getSquareAt(Direction.EAST)).isEqualTo(s1);
     }
@@ -62,7 +64,7 @@ class BoardFactoryTest {
      */
     @Test
     void connectedWest() {
-        factory.createBoard(new Square[][]{{s1}, {s2}});
+        factory.createBoard(Array.of(Array.of(s1), Array.of(s2)));
         assertThat(s1.getSquareAt(Direction.WEST)).isEqualTo(s2);
         assertThat(s2.getSquareAt(Direction.WEST)).isEqualTo(s1);
     }
@@ -72,7 +74,7 @@ class BoardFactoryTest {
      */
     @Test
     void connectedNorth() {
-        factory.createBoard(new Square[][]{{s1, s2}});
+        factory.createBoard(Array.of(Array.of(s1, s2)));
         assertThat(s1.getSquareAt(Direction.NORTH)).isEqualTo(s2);
         assertThat(s2.getSquareAt(Direction.NORTH)).isEqualTo(s1);
     }
@@ -82,7 +84,7 @@ class BoardFactoryTest {
      */
     @Test
     void connectedSouth() {
-        factory.createBoard(new Square[][]{{s1, s2}});
+        factory.createBoard(Array.of(Array.of(s1, s2)));
         assertThat(s1.getSquareAt(Direction.SOUTH)).isEqualTo(s2);
         assertThat(s2.getSquareAt(Direction.SOUTH)).isEqualTo(s1);
     }

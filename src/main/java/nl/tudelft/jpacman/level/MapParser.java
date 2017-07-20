@@ -1,180 +1,112 @@
 package nl.tudelft.jpacman.level;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.List;
-
+import io.vavr.CheckedFunction1;
+import io.vavr.Function1;
+import io.vavr.Function3;
+import io.vavr.Tuple3;
+import io.vavr.collection.List;
+import io.vavr.control.Try;
 import nl.tudelft.jpacman.PacmanConfigurationException;
 import nl.tudelft.jpacman.board.Board;
 import nl.tudelft.jpacman.board.BoardFactory;
 import nl.tudelft.jpacman.board.Square;
 import nl.tudelft.jpacman.npc.NPC;
 
-/**
- * Creates new {@link Level}s from text representations.
- *
- * @author Jeroen Roosen 
- */
-public class MapParser {
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.function.Function;
 
-    /**
-     * The factory that creates the levels.
-     */
-    private final LevelFactory levelCreator;
+public interface MapParser<T> extends Function1<T, Try<Level>> {
 
-    /**
-     * The factory that creates the squares and board.
-     */
-    private final BoardFactory boardCreator;
+    static MapParser<List<List<Character>>> characterMapParser(BoardFactory boardFactory, LevelFactory levelFactory) {
+        return new MapParser<List<List<Character>>>() {
+            @Override
+            public Try<Level> apply(List<List<Character>> chars) {
+                return Try.ofCallable(() -> {
+                    Function1<Character, Square> squareForChar = Function3.of(this::squareForChar).apply(boardFactory).apply(levelFactory);
+                    List<List<Square>> squares = chars.map(row -> row.map(squareForChar));
+                    List<Tuple3<Character, Integer, Integer>> indexedChars = chars.map(List::zipWithIndex).zipWithIndex()
+                        .flatMap(cs -> cs._1.map(c -> new Tuple3<>(c._1, cs._2, c._2)));
 
-    /**
-     * Creates a new map parser.
-     *
-     * @param levelFactory
-     *            The factory providing the NPC objects and the level.
-     * @param boardFactory
-     *            The factory providing the Square objects and the board.
-     */
-    public MapParser(LevelFactory levelFactory, BoardFactory boardFactory) {
-        this.levelCreator = levelFactory;
-        this.boardCreator = boardFactory;
-    }
+                    List<Tuple3<NPC, Integer, Integer>> ghosts = indexedChars.filter(c -> c._1 == 'G')
+                        .map(ghost -> ghost.map1(g -> levelFactory.createGhost()));
 
-    /**
-     * Parses the text representation of the board into an actual level.
-     *
-     * <ul>
-     * <li>Supported characters:
-     * <li>' ' (space) an empty square.
-     * <li>'#' (bracket) a wall.
-     * <li>'.' (period) a square with a pellet.
-     * <li>'P' (capital P) a starting square for players.
-     * <li>'G' (capital G) a square with a ghost.
-     * </ul>
-     *
-     * @param map
-     *            The text representation of the board, with map[x][y]
-     *            representing the square at position x,y.
-     * @return The level as represented by this text.
-     */
-    public Level parseMap(char[][] map) {
-        int width = map.length;
-        int height = map[0].length;
+                    ghosts.forEach(ghost -> ghost._1.occupy(squares.get(ghost._2).get(ghost._3)));
 
-        Square[][] grid = new Square[width][height];
+                    List<Square> playerPositions = indexedChars.filter(p -> p._1 == 'P')
+                        .map(p -> squares.get(p._2).get(p._3));
 
-        List<NPC> ghosts = new ArrayList<>();
-        List<Square> startPositions = new ArrayList<>();
-
-        makeGrid(map, width, height, grid, ghosts, startPositions);
-
-        Board board = boardCreator.createBoard(grid);
-        return levelCreator.createLevel(board, ghosts, startPositions);
-    }
-
-    private void makeGrid(char[][] map, int width, int height,
-                          Square[][] grid, List<NPC> ghosts, List<Square> startPositions) {
-        for (int x = 0; x < width; x++) {
-            for (int y = 0; y < height; y++) {
-                char c = map[x][y];
-                addSquare(grid, ghosts, startPositions, x, y, c);
+                    Board board = boardFactory.createBoard(squares.map(List::toArray).toArray());
+                    return levelFactory.createLevel(board, ghosts.map(Tuple3::_1), playerPositions);
+                });
             }
-        }
+        };
     }
 
-    /**
-     * Adds a square to the grid based on a given character. These
-     * character come from the map files and describe the type
-     * of square.
-     *
-     * @param grid
-     *            The grid of squares with board[x][y] being the
-     *            square at column x, row y.
-     * @param ghosts
-     *            List of all ghosts that were added to the map.
-     * @param startPositions
-     *            List of all start positions that were added
-     *            to the map.
-     * @param x
-     *            x coordinate of the square.
-     * @param y
-     *            y coordinate of the square.
-     * @param c
-     *            Character describing the square type.
-     */
-    protected void addSquare(Square[][] grid, List<NPC> ghosts,
-                             List<Square> startPositions, int x, int y, char c) {
+    default Square squareForChar(BoardFactory boardCreator, LevelFactory levelCreator, char c) {
         switch (c) {
             case ' ':
-                grid[x][y] = boardCreator.createGround();
-                break;
+                return boardCreator.createGround();
             case '#':
-                grid[x][y] = boardCreator.createWall();
-                break;
+                return boardCreator.createWall();
             case '.':
                 Square pelletSquare = boardCreator.createGround();
-                grid[x][y] = pelletSquare;
                 levelCreator.createPellet().occupy(pelletSquare);
-                break;
+                return pelletSquare;
             case 'G':
-                Square ghostSquare = makeGhostSquare(ghosts);
-                grid[x][y] = ghostSquare;
-                break;
+                return makeGhostSquare(boardCreator, levelCreator);
             case 'P':
-                Square playerSquare = boardCreator.createGround();
-                grid[x][y] = playerSquare;
-                startPositions.add(playerSquare);
-                break;
+                return boardCreator.createGround();
             default:
-                throw new PacmanConfigurationException("Invalid character at "
-                    + x + "," + y + ": " + c);
+                throw new PacmanConfigurationException("Invalid character:" + c);
         }
     }
 
-    private Square makeGhostSquare(List<NPC> ghosts) {
+    static Square makeGhostSquare(BoardFactory boardCreator, LevelFactory levelCreator) {
         Square ghostSquare = boardCreator.createGround();
         NPC ghost = levelCreator.createGhost();
-        ghosts.add(ghost);
         ghost.occupy(ghostSquare);
         return ghostSquare;
     }
 
-    /**
-     * Parses the list of strings into a 2-dimensional character array and
-     * passes it on to {@link #parseMap(char[][])}.
-     *
-     * @param text
-     *            The plain text, with every entry in the list being a equally
-     *            sized row of squares on the board and the first element being
-     *            the top row.
-     * @return The level as represented by the text.
-     * @throws PacmanConfigurationException If text lines are not properly formatted.
-     */
-    public Level parseMap(List<String> text) {
+    static Function1<List<String>, Try<Level>> listMapParser(MapParser<List<List<Character>>> defaultParser) {
+        Function<List<String>, List<List<Character>>> conversion = lines -> transpose(lines.map(String::toCharArray).map(List::ofAll));
 
-        checkMapFormat(text);
+        Function1<List<String>, Try<List<String>>> checkFormat = Function1.liftTry(Function1.of(MapParser::checkMapFormat));
 
-        int height = text.size();
-        int width = text.get(0).length();
+        return checkFormat.andThen(strings -> strings.flatMap(defaultParser.compose(conversion)));
+    }
 
-        char[][] map = new char[width][height];
-        for (int x = 0; x < width; x++) {
-            for (int y = 0; y < height; y++) {
-                map[x][y] = text.get(y).charAt(x);
-            }
+    static <T> List<List<T>> transpose(List<List<T>> matrix) {
+        if (matrix.exists(List::isEmpty)) {
+            return List.empty();
+        } else {
+            List<List<T>> transpose = transpose(matrix.map(List::tail));
+            List<T> map = matrix.map(List::head);
+            return transpose.prepend(map);
         }
-        return parseMap(map);
+    }
+
+
+    static Function1<String, Try<Level>> resourceMapParser(MapParser<List<List<Character>>> parser2) {
+        Function1<String, Try<List<String>>> stringTryFunction1 = Function1.of(MapParser.class::getResource)
+            .andThen(CheckedFunction1.liftTry(CheckedFunction1.of(URL::toURI)
+                .andThen(Paths::get)
+                .andThen(Files::readAllLines)
+                .andThen(List::ofAll)
+            ));
+
+        return stringTryFunction1.andThen(chars -> chars.flatMap(listMapParser(parser2)));
     }
 
     /**
      * Check the correctness of the map lines in the text.
+     *
      * @param text Map to be checked
      * @throws PacmanConfigurationException if map is not OK.
      */
-    private void checkMapFormat(List<String> text) {
+    static List<String> checkMapFormat(List<String> text) {
         if (text == null) {
             throw new PacmanConfigurationException(
                 "Input text cannot be null.");
@@ -198,45 +130,7 @@ public class MapParser {
                     "Input text lines are not of equal width.");
             }
         }
-    }
 
-    /**
-     * Parses the provided input stream as a character stream and passes it
-     * result to {@link #parseMap(List)}.
-     *
-     * @param source
-     *            The input stream that will be read.
-     * @return The parsed level as represented by the text on the input stream.
-     * @throws IOException
-     *             when the source could not be read.
-     */
-    public Level parseMap(InputStream source) throws IOException {
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(
-            source, "UTF-8"))) {
-            List<String> lines = new ArrayList<>();
-            while (reader.ready()) {
-                lines.add(reader.readLine());
-            }
-            return parseMap(lines);
-        }
-    }
-
-    /**
-     * Parses the provided input stream as a character stream and passes it
-     * result to {@link #parseMap(List)}.
-     *
-     * @param mapName
-     *            Name of a resource that will be read.
-     * @return The parsed level as represented by the text on the input stream.
-     * @throws IOException
-     *             when the resource could not be read.
-     */
-    public Level parseMap(String mapName) throws IOException {
-        try (InputStream boardStream = MapParser.class.getResourceAsStream(mapName)) {
-            if (boardStream == null) {
-                throw new PacmanConfigurationException("Could not get resource for: " + mapName);
-            }
-            return parseMap(boardStream);
-        }
+        return text;
     }
 }

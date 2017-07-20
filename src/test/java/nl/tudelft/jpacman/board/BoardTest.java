@@ -1,5 +1,6 @@
 package nl.tudelft.jpacman.board;
 
+import io.vavr.collection.Array;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -17,10 +18,10 @@ class BoardTest {
     private static final int MAX_WIDTH = 2;
     private static final int MAX_HEIGHT = 3;
 
-    private final Square[][] grid = {
-        { mock(Square.class), mock(Square.class), mock(Square.class) },
-        { mock(Square.class), mock(Square.class), mock(Square.class) },
-    };
+    private final Array<Array<Square>> grid = Array.of(
+        Array.of(mock(Square.class), mock(Square.class), mock(Square.class)),
+        Array.of(mock(Square.class), mock(Square.class), mock(Square.class))
+    );
     private final Board board = new Board(grid);
 
     /**
@@ -51,6 +52,6 @@ class BoardTest {
         "0, 1"
     })
     void testSquareAt(int x, int y) {
-        assertThat(board.squareAt(x, y)).isEqualTo(grid[x][y]);
+        assertThat(board.squareAt(x, y)).isEqualTo(grid.get(x).get(y));
     }
 }

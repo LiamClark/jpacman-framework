@@ -1,5 +1,9 @@
 package nl.tudelft.jpacman.board;
 
+import io.vavr.collection.Array;
+
+import java.util.Objects;
+
 /**
  * A top-down view of a matrix of {@link Square}s.
  *
@@ -10,7 +14,7 @@ public class Board {
     /**
      * The grid of squares with board[x][y] being the square at column x, row y.
      */
-    private final Square[][] board;
+    private final Array<Array<Square>> board;
 
     /**
      * Creates a new board.
@@ -19,7 +23,7 @@ public class Board {
      *            The grid of squares with grid[x][y] being the square at column
      *            x, row y.
      */
-    Board(Square[][] grid) {
+    Board(Array<Array<Square>> grid) {
         assert grid != null;
         this.board = grid;
         assert invariant() : "Initial grid cannot contain null squares";
@@ -30,14 +34,7 @@ public class Board {
      * @return false if any square on the board is null.
      */
     protected final boolean invariant() {
-        for (Square[] row : board) {
-            for (Square square : row) {
-                if (square == null) {
-                    return false;
-                }
-            }
-        }
-        return true;
+        return board.forAll(row -> row.forAll(Objects::nonNull));
     }
 
     /**
@@ -46,7 +43,7 @@ public class Board {
      * @return The width of this board.
      */
     public int getWidth() {
-        return board.length;
+        return board.size();
     }
 
     /**
@@ -55,7 +52,7 @@ public class Board {
      * @return The height of this board.
      */
     public int getHeight() {
-        return board[0].length;
+        return board.get(0).size();
     }
 
     /**
@@ -72,7 +69,7 @@ public class Board {
      */
     public Square squareAt(int x, int y) {
         assert withinBorders(x, y);
-        Square result = board[x][y];
+        Square result = board.get(x).get(y);
         assert result != null : "Follows from invariant.";
         return result;
     }

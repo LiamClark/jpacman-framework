@@ -1,8 +1,8 @@
 package nl.tudelft.jpacman.level;
 
-import java.util.List;
 import java.util.Map;
 
+import io.vavr.collection.List;
 import nl.tudelft.jpacman.board.Board;
 import nl.tudelft.jpacman.board.Direction;
 import nl.tudelft.jpacman.board.Square;

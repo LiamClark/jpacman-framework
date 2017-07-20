@@ -4,30 +4,27 @@ import static org.mockito.Mockito.mock;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.io.IOException;
-import java.io.InputStream;
-
+import io.vavr.Function1;
 import io.vavr.collection.List;
 import io.vavr.control.Option;
+import io.vavr.control.Try;
 import nl.tudelft.jpacman.board.Board;
 import nl.tudelft.jpacman.board.BoardFactory;
 import nl.tudelft.jpacman.board.Direction;
 import nl.tudelft.jpacman.board.Square;
 import nl.tudelft.jpacman.board.Unit;
+import nl.tudelft.jpacman.level.Level;
 import nl.tudelft.jpacman.level.LevelFactory;
 import nl.tudelft.jpacman.level.MapParser;
 import nl.tudelft.jpacman.level.Pellet;
 import nl.tudelft.jpacman.sprite.PacManSprites;
 
-import com.google.common.collect.Lists;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 /**
  * Tests the various methods provided by the {@link Navigation} class.
  *
  * @author Jeroen Roosen
- *
  */
 @SuppressWarnings({"magicnumber", "PMD.AvoidDuplicateLiterals"})
 class NavigationTest {
@@ -35,24 +32,17 @@ class NavigationTest {
     /**
      * Map parser used to construct boards.
      */
-    private MapParser parser;
-
-    /**
-     * Set up the map parser.
-     */
-    @BeforeEach
-    void setUp() {
-        PacManSprites sprites = new PacManSprites();
-        parser = new MapParser(new LevelFactory(sprites, new GhostFactory(
-            sprites)), new BoardFactory(sprites));
-    }
+    private PacManSprites sprites = new PacManSprites();
+    private MapParser<List<List<Character>>> defaultParser = MapParser.characterMapParser(new BoardFactory(sprites),
+        new LevelFactory(sprites, new GhostFactory(sprites)));
+    private Function1<List<String>, Try<Level>> parser = MapParser.listMapParser(defaultParser);
 
     /**
      * Verifies that the path to the same square is empty.
      */
     @Test
     void testShortestPathEmpty() {
-        Board b = parser.parseMap(Lists.newArrayList(" ")).getBoard();
+        Board b = parser.apply(List.of(" ")).get().getBoard();
         Square s1 = b.squareAt(0, 0);
         Square s2 = b.squareAt(0, 0);
         Option<List<Direction>> path = Navigation
@@ -66,7 +56,8 @@ class NavigationTest {
     @Test
     void testNoShortestPath() {
         Board b = parser
-            .parseMap(Lists.newArrayList("#####", "# # #", "#####"))
+            .apply(List.of("#####", "# # #", "#####"))
+            .get()
             .getBoard();
         Square s1 = b.squareAt(1, 1);
         Square s2 = b.squareAt(3, 1);
@@ -81,7 +72,8 @@ class NavigationTest {
     @Test
     void testNoTraveller() {
         Board b = parser
-            .parseMap(Lists.newArrayList("#####", "# # #", "#####"))
+            .apply(List.of("#####", "# # #", "#####"))
+            .get()
             .getBoard();
         Square s1 = b.squareAt(1, 1);
         Square s2 = b.squareAt(3, 1);
@@ -94,7 +86,8 @@ class NavigationTest {
      */
     @Test
     void testSimplePath() {
-        Board b = parser.parseMap(Lists.newArrayList("####", "#  #", "####"))
+        Board b = parser.apply(List.of("####", "#  #", "####"))
+            .get()
             .getBoard();
         Square s1 = b.squareAt(1, 1);
         Square s2 = b.squareAt(2, 1);
@@ -108,8 +101,8 @@ class NavigationTest {
      */
     @Test
     void testCornerPath() {
-        Board b = parser.parseMap(
-            Lists.newArrayList("####", "#  #", "## #", "####")).getBoard();
+        Board b = parser.apply(
+            List.of("####", "#  #", "## #", "####")).get().getBoard();
         Square s1 = b.squareAt(1, 1);
         Square s2 = b.squareAt(2, 2);
         Option<List<Direction>> path = Navigation
@@ -123,7 +116,8 @@ class NavigationTest {
     @Test
     void testNearestUnit() {
         Board b = parser
-            .parseMap(Lists.newArrayList("#####", "# ..#", "#####"))
+            .apply(List.of("#####", "# ..#", "#####"))
+            .get()
             .getBoard();
         Square s1 = b.squareAt(1, 1);
         Square s2 = b.squareAt(2, 1);
@@ -136,7 +130,7 @@ class NavigationTest {
      */
     @Test
     void testNoNearestUnit() {
-        Board b = parser.parseMap(Lists.newArrayList(" ")).getBoard();
+        Board b = parser.apply(List.of(" ")).get().getBoard();
         Square s1 = b.squareAt(0, 0);
         Option<Unit> unit = Navigation.findNearest(Pellet.class, s1);
         assertThat(unit).isEmpty();
@@ -145,16 +139,12 @@ class NavigationTest {
     /**
      * Verifies that there is ghost on the default board
      * next to cell [1, 1].
-     *
-     * @throws IOException if board reading fails.
      */
     @Test
-    void testFullSizedLevel() throws IOException {
-        try (InputStream i = getClass().getResourceAsStream("/board.txt")) {
-            Board b = parser.parseMap(i).getBoard();
-            Square s1 = b.squareAt(1, 1);
-            Option<Unit> unit = Navigation.findNearest(Ghost.class, s1);
-            assertThat(unit).isNotNull();
-        }
+    void testFullSizedLevel() {
+        Board b = MapParser.resourceMapParser(defaultParser).apply("/board.txt").get().getBoard();
+        Square s1 = b.squareAt(1, 1);
+        Option<Unit> unit = Navigation.findNearest(Ghost.class, s1);
+        assertThat(unit).isNotNull();
     }
 }

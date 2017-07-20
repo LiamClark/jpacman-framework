@@ -3,7 +3,6 @@ package nl.tudelft.jpacman.level;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -11,6 +10,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import io.vavr.collection.List;
 import nl.tudelft.jpacman.board.Board;
 import nl.tudelft.jpacman.board.Direction;
 import nl.tudelft.jpacman.board.Square;
@@ -66,7 +66,7 @@ public class Level {
     /**
      * The players on this level.
      */
-    private final List<Player> players;
+    private List<Player> players;
 
     /**
      * The table of possible collisions between units.
@@ -104,7 +104,7 @@ public class Level {
         }
         this.startSquares = startPositions;
         this.startSquareIndex = 0;
-        this.players = new ArrayList<>();
+        this.players = List.empty();
         this.collisions = collisionMap;
         this.observers = new HashSet<>();
     }
@@ -144,7 +144,7 @@ public class Level {
         if (players.contains(player)) {
             return;
         }
-        players.add(player);
+        this.players = players.prepend(player);
         Square square = startSquares.get(startSquareIndex);
         player.occupy(square);
         startSquareIndex++;
@@ -184,7 +184,7 @@ public class Level {
             Square destination = location.getSquareAt(direction);
 
             if (destination.isAccessibleTo(unit)) {
-                List<Unit> occupants = destination.getOccupants();
+                java.util.List<Unit> occupants = destination.getOccupants();
                 unit.occupy(destination);
                 for (Unit occupant : occupants) {
                     collisions.collide(unit, occupant);

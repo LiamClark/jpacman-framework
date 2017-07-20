@@ -1,18 +1,14 @@
 package nl.tudelft.jpacman.level;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import io.vavr.collection.List;
 import nl.tudelft.jpacman.board.Board;
 import nl.tudelft.jpacman.board.Square;
 import nl.tudelft.jpacman.npc.NPC;
-
-import com.google.common.collect.Lists;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.*;
 
 /**
  * Tests various aspects of level.
@@ -60,7 +56,7 @@ class LevelTest {
     @BeforeEach
     void setUp() {
         final long defaultInterval = 100L;
-        level = new Level(board, Lists.newArrayList(ghost), Lists.newArrayList(
+        level = new Level(board, List.of(ghost), List.of(
             square1, square2), collisions);
         when(ghost.getInterval()).thenReturn(defaultInterval);
     }
