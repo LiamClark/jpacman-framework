@@ -8,6 +8,7 @@ import nl.tudelft.jpacman.board.Board;
 import nl.tudelft.jpacman.board.BoardFactory;
 import nl.tudelft.jpacman.board.Square;
 import nl.tudelft.jpacman.npc.NPC;
+import nl.tudelft.jpacman.npc.ghost.Ghost;
 
 import java.net.URL;
 import java.nio.file.Files;
@@ -20,10 +21,10 @@ public interface MapParser<T> extends Function1<T, Try<Level>> {
             @Override
             public Try<Level> apply(List<List<Character>> chars) {
                 return Try.ofCallable(() -> {
-                    Function1<Character, Tuple3<Square, List<NPC>, List<Square>>> squareForChar = Function3.of(this::squareForCharWriter).apply(boardFactory).apply(levelFactory);
-                    List<List<Tuple3<Square, List<NPC>, List<Square>>>> squares = chars.map(row -> row.map(squareForChar));
+                    Function1<Character, Tuple3<Square, List<Ghost>, List<Square>>> squareForChar = Function3.of(this::squareForCharWriter).apply(boardFactory).apply(levelFactory);
+                    List<List<Tuple3<Square, List<Ghost>, List<Square>>>> squares = chars.map(row -> row.map(squareForChar));
 
-                    Tuple2<List<NPC>, List<Square>> positions = squares.flatMap(Function.identity())
+                    Tuple2<List<Ghost>, List<Square>> positions = squares.flatMap(Function.identity())
                         .map(a -> Tuple.of(a._2, a._3))
                         .fold(Tuple.of(List.empty(), List.empty()), (a, b) -> a.map(b._1::prependAll, b._2::prependAll));
 
@@ -34,7 +35,7 @@ public interface MapParser<T> extends Function1<T, Try<Level>> {
         };
     }
 
-    default Tuple3<Square, List<NPC>, List<Square>> squareForCharWriter(BoardFactory boardCreator, LevelFactory levelCreator, char c) {
+    default Tuple3<Square, List<Ghost>, List<Square>> squareForCharWriter(BoardFactory boardCreator, LevelFactory levelCreator, char c) {
         switch (c) {
             case ' ':
                 return justGround(boardCreator.createGround());
@@ -45,7 +46,7 @@ public interface MapParser<T> extends Function1<T, Try<Level>> {
                 levelCreator.createPellet().occupy(pelletSquare);
                 return justGround(pelletSquare);
             case 'G':
-                NPC ghost = levelCreator.createGhost();
+                Ghost ghost = levelCreator.createGhost();
                 Square square = boardCreator.createGround();
                 ghost.occupy(square);
                 return Tuple.of(square, List.of(ghost), List.empty());
@@ -57,7 +58,7 @@ public interface MapParser<T> extends Function1<T, Try<Level>> {
         }
     }
 
-    static Tuple3<Square, List<NPC>, List<Square>> justGround(Square ground) {
+    static Tuple3<Square, List<Ghost>, List<Square>> justGround(Square ground) {
         return new Tuple3<>(ground, List.empty(), List.empty());
     }
 

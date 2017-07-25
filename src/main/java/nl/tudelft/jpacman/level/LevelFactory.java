@@ -6,7 +6,6 @@ import io.vavr.collection.List;
 import nl.tudelft.jpacman.board.Board;
 import nl.tudelft.jpacman.board.Direction;
 import nl.tudelft.jpacman.board.Square;
-import nl.tudelft.jpacman.npc.NPC;
 import nl.tudelft.jpacman.npc.ghost.Ghost;
 import nl.tudelft.jpacman.npc.ghost.GhostColor;
 import nl.tudelft.jpacman.npc.ghost.GhostFactory;
@@ -71,7 +70,7 @@ public class LevelFactory {
      *            A list of squares from which players may start the game.
      * @return A new level for the board.
      */
-    public Level createLevel(Board board, List<NPC> ghosts,
+    public Level createLevel(Board board, List<Ghost> ghosts,
                              List<Square> startPositions) {
 
         // We'll adopt the simple collision map for now.
@@ -85,7 +84,7 @@ public class LevelFactory {
      *
      * @return The new ghost.
      */
-    NPC createGhost() {
+    Ghost createGhost() {
         ghostIndex++;
         ghostIndex %= GHOSTS;
         switch (ghostIndex) {

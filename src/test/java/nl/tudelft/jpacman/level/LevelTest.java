@@ -3,7 +3,7 @@ package nl.tudelft.jpacman.level;
 import io.vavr.collection.List;
 import nl.tudelft.jpacman.board.Board;
 import nl.tudelft.jpacman.board.Square;
-import nl.tudelft.jpacman.npc.NPC;
+import nl.tudelft.jpacman.npc.ghost.Ghost;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -27,7 +27,7 @@ class LevelTest {
     /**
      * An NPC on this level.
      */
-    private final NPC ghost = mock(NPC.class);
+    private final Ghost ghost = mock(Ghost.class);
 
     /**
      * Starting position 1.
