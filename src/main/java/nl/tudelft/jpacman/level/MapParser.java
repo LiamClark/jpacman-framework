@@ -1,9 +1,6 @@
 package nl.tudelft.jpacman.level;
 
-import io.vavr.CheckedFunction1;
-import io.vavr.Function1;
-import io.vavr.Function3;
-import io.vavr.Tuple3;
+import io.vavr.*;
 import io.vavr.collection.List;
 import io.vavr.control.Try;
 import nl.tudelft.jpacman.PacmanConfigurationException;
@@ -18,49 +15,50 @@ import java.nio.file.Paths;
 import java.util.function.Function;
 
 public interface MapParser<T> extends Function1<T, Try<Level>> {
-
     static MapParser<List<List<Character>>> characterMapParser(BoardFactory boardFactory, LevelFactory levelFactory) {
         return new MapParser<List<List<Character>>>() {
             @Override
             public Try<Level> apply(List<List<Character>> chars) {
                 return Try.ofCallable(() -> {
-                    Function1<Character, Square> squareForChar = Function3.of(this::squareForChar).apply(boardFactory).apply(levelFactory);
-                    List<List<Square>> squares = chars.map(row -> row.map(squareForChar));
-                    List<Tuple3<Character, Integer, Integer>> indexedChars = chars.map(List::zipWithIndex).zipWithIndex()
-                        .flatMap(cs -> cs._1.map(c -> new Tuple3<>(c._1, cs._2, c._2)));
+                    Function1<Character, Tuple3<Square, List<NPC>, List<Square>>> squareForChar = Function3.of(this::squareForCharWriter).apply(boardFactory).apply(levelFactory);
+                    List<List<Tuple3<Square, List<NPC>, List<Square>>>> squares = chars.map(row -> row.map(squareForChar));
 
-                    List<Tuple3<NPC, Integer, Integer>> ghosts = indexedChars.filter(a -> a._1 == 'G')
-                        .map(ghost -> ghost.map1(g -> levelFactory.createGhost()));
+                    Tuple2<List<NPC>, List<Square>> positions = squares.flatMap(Function.identity())
+                        .map(a -> Tuple.of(a._2, a._3))
+                        .fold(Tuple.of(List.empty(), List.empty()), (a, b) -> a.map(b._1::prependAll, b._2::prependAll));
 
-                    ghosts.forEach(ghost -> ghost._1.occupy(squares.get(ghost._2).get(ghost._3)));
-
-                    List<Square> playerPositions = indexedChars.filter(p -> p._1 == 'P')
-                        .map(p -> squares.get(p._2).get(p._3));
-
-                    Board board = boardFactory.createBoard(squares.map(List::toArray).toArray());
-                    return levelFactory.createLevel(board, ghosts.map(Tuple3::_1), playerPositions);
+                    Board board = boardFactory.createBoard(squares.map(xs -> xs.map(Tuple3::_1)).map(List::toArray).toArray());
+                    return levelFactory.createLevel(board, positions._1, positions._2);
                 });
             }
         };
     }
 
-    default Square squareForChar(BoardFactory boardCreator, LevelFactory levelCreator, char c) {
+    default Tuple3<Square, List<NPC>, List<Square>> squareForCharWriter(BoardFactory boardCreator, LevelFactory levelCreator, char c) {
         switch (c) {
             case ' ':
-                return boardCreator.createGround();
+                return justGround(boardCreator.createGround());
             case '#':
-                return boardCreator.createWall();
+                return justGround(boardCreator.createWall());
             case '.':
                 Square pelletSquare = boardCreator.createGround();
                 levelCreator.createPellet().occupy(pelletSquare);
-                return pelletSquare;
+                return justGround(pelletSquare);
             case 'G':
-                return boardCreator.createGround();
+                NPC ghost = levelCreator.createGhost();
+                Square square = boardCreator.createGround();
+                ghost.occupy(square);
+                return Tuple.of(square, List.of(ghost), List.empty());
             case 'P':
-                return boardCreator.createGround();
+                Square ground = boardCreator.createGround();
+                return Tuple.of(ground, List.empty(), List.of(ground));
             default:
                 throw new PacmanConfigurationException("Invalid character:" + c);
         }
+    }
+
+    static Tuple3<Square, List<NPC>, List<Square>> justGround(Square ground) {
+        return new Tuple3<>(ground, List.empty(), List.empty());
     }
 
     static Function1<List<String>, Try<Level>> listMapParser(MapParser<List<List<Character>>> defaultParser) {
