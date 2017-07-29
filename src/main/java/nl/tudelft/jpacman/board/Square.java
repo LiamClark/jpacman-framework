@@ -7,8 +7,6 @@ import java.util.Map;
 
 import com.google.common.collect.ImmutableList;
 
-import io.vavr.Predicates;
-import io.vavr.collection.Stream;
 import nl.tudelft.jpacman.sprite.Sprite;
 
 /**
@@ -35,7 +33,6 @@ public abstract class Square {
     protected Square() {
         this.occupants = new ArrayList<>();
         this.neighbours = new EnumMap<>(Direction.class);
-        assert invariant();
     }
 
     /**
@@ -60,7 +57,6 @@ public abstract class Square {
      */
     public void link(Square neighbour, Direction direction) {
         neighbours.put(direction, neighbour);
-        assert invariant();
     }
 
     /**
@@ -98,16 +94,6 @@ public abstract class Square {
         occupants.remove(occupant);
     }
 
-    /**
-     * Verifies that all occupants on this square have indeed listed this square
-     * as the square they are currently occupying.
-     *
-     * @return <code>true</code> iff all occupants of this square have this
-     *         square listed as the square they are currently occupying.
-     */
-    protected final boolean invariant() {
-        return Stream.ofAll(occupants).forAll(Predicates.allOf(Unit::hasSquare, o -> o.getSquare() == this));
-    }
 
     /**
      * Determines whether the unit is allowed to occupy this square.

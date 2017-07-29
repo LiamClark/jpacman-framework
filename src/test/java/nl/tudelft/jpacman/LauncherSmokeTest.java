@@ -72,11 +72,11 @@ public class LauncherSmokeTest {
         game.move(player, Direction.WEST);
         assertThat(player.getScore()).isEqualTo(10);
 
-        // try to move as far as we can
+        // try to movedTo as far as we can
         move(game, Direction.EAST, 7);
         assertThat(player.getScore()).isEqualTo(60);
 
-        // move towards the monsters
+        // movedTo towards the monsters
         move(game, Direction.NORTH, 6);
         assertThat(player.getScore()).isEqualTo(120);
 
@@ -87,7 +87,7 @@ public class LauncherSmokeTest {
         move(game, Direction.NORTH, 2);
 
         // Sleeping in tests is generally a bad idea.
-        // Here we do it just to let the monsters move.
+        // Here we do it just to let the monsters movedTo.
         Thread.sleep(500L);
 
         // we're close to monsters, this will get us killed.

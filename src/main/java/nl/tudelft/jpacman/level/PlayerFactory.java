@@ -1,5 +1,7 @@
 package nl.tudelft.jpacman.level;
 
+import nl.tudelft.jpacman.board.Direction;
+import nl.tudelft.jpacman.board.Square;
 import nl.tudelft.jpacman.sprite.PacManSprites;
 
 /**
@@ -29,8 +31,8 @@ public class PlayerFactory {
      *
      * @return A new player.
      */
-    public Player createPacMan() {
-        return new Player(getSprites().getPacmanSprites(), getSprites().getPacManDeathAnimation());
+    public Player createPacMan(Square square, Direction direction) {
+        return new Player(square, direction, getSprites().getPacmanSprites(), getSprites().getPacManDeathAnimation());
     }
 
     /**

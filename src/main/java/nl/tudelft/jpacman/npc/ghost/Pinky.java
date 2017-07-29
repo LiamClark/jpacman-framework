@@ -68,8 +68,13 @@ public class Pinky extends Ghost {
      * @param spriteMap
      *            The sprites for this ghost.
      */
-    public Pinky(Map<Direction, Sprite> spriteMap) {
-        super(spriteMap, MOVE_INTERVAL, INTERVAL_VARIATION);
+    public Pinky(Square square, Direction direction, Map<Direction, Sprite> spriteMap) {
+        super(square, direction, spriteMap, MOVE_INTERVAL, INTERVAL_VARIATION);
+    }
+
+    @Override
+    public Pinky movedTo(Square square, Direction direction) {
+        return new Pinky(square, direction, sprites);
     }
 
     /**
@@ -88,18 +93,13 @@ public class Pinky extends Ghost {
      */
     @Override
     public Direction nextMove() {
-        assert hasSquare();
-
-        return Navigation.findNearest(Player.class, getSquare())
+        return Navigation.findNearest(Player.class, square)
             .flatMap(player -> {
-                Direction targetDirection = player.getDirection();
-                Square destination = player.getSquare();
-
-                Square finalDestination = Stream.continually(targetDirection)
+                Square finalDestination = Stream.continually(player.direction)
                     .take(SQUARES_AHEAD)
-                    .foldRight(destination, (direction, sq) -> sq.getSquareAt(direction));
+                    .foldRight(player.square, (direction, sq) -> sq.getSquareAt(direction));
 
-                Option<List<Direction>> path = Navigation.shortestPath(getSquare(), finalDestination, this);
+                Option<List<Direction>> path = Navigation.shortestPath(square, finalDestination, this);
                 return path.map(Stream::ofAll).flatMap(Stream::headOption);
             }).getOrElse(randomMove());
     }

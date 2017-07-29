@@ -2,13 +2,15 @@ package nl.tudelft.jpacman.level;
 
 import io.vavr.*;
 import io.vavr.collection.List;
+import io.vavr.control.Option;
 import io.vavr.control.Try;
 import nl.tudelft.jpacman.PacmanConfigurationException;
 import nl.tudelft.jpacman.board.Board;
 import nl.tudelft.jpacman.board.BoardFactory;
+import nl.tudelft.jpacman.board.Direction;
 import nl.tudelft.jpacman.board.Square;
-import nl.tudelft.jpacman.npc.NPC;
 import nl.tudelft.jpacman.npc.ghost.Ghost;
+import nl.tudelft.jpacman.sprite.PacManSprites;
 
 import java.net.URL;
 import java.nio.file.Files;
@@ -21,21 +23,24 @@ public interface MapParser<T> extends Function1<T, Try<Level>> {
             @Override
             public Try<Level> apply(List<List<Character>> chars) {
                 return Try.ofCallable(() -> {
-                    Function1<Character, Tuple3<Square, List<Ghost>, List<Square>>> squareForChar = Function3.of(this::squareForCharWriter).apply(boardFactory).apply(levelFactory);
-                    List<List<Tuple3<Square, List<Ghost>, List<Square>>>> squares = chars.map(row -> row.map(squareForChar));
+                    Function1<Character, Tuple4<Square, List<Ghost>, List<Pellet>, Option<Player>>> squareForChar =
+                        Function3.of(this::squareForCharWriter).apply(boardFactory).apply(levelFactory);
+                    List<List<Tuple4<Square, List<Ghost>, List<Pellet>, Option<Player>>>> squares = chars.map(row -> row.map(squareForChar));
 
-                    Tuple2<List<Ghost>, List<Square>> positions = squares.flatMap(Function.identity())
-                        .map(a -> Tuple.of(a._2, a._3))
-                        .fold(Tuple.of(List.empty(), List.empty()), (a, b) -> a.map(b._1::prependAll, b._2::prependAll));
+                    Tuple3<List<Ghost>, List<Pellet>, Option<Player>> positions = squares.flatMap(Function.identity())
+                        .map(a -> Tuple.of(a._2, a._3, a._4))
+                        .fold(Tuple.of(List.empty(), List.empty(), Option.none()), (a, b) -> a.map(b._1::prependAll, b._2::prependAll, b._3::orElse));
 
-                    Board board = boardFactory.createBoard(squares.map(xs -> xs.map(Tuple3::_1)).map(List::toArray).toArray());
-                    return levelFactory.createLevel(board, positions._1, positions._2);
+                    Board board = boardFactory.createBoard(squares.map(xs -> xs.map(Tuple4::_1)).map(List::toArray).toArray());
+                    Player player = positions._3.getOrElseThrow(() -> new PacmanConfigurationException("map must have a player"));
+
+                    return levelFactory.createLevel(board, positions._1, positions._2, player);
                 });
             }
         };
     }
 
-    default Tuple3<Square, List<Ghost>, List<Square>> squareForCharWriter(BoardFactory boardCreator, LevelFactory levelCreator, char c) {
+    default Tuple4<Square, List<Ghost>, List<Pellet>, Option<Player>> squareForCharWriter(BoardFactory boardCreator, LevelFactory levelCreator, char c) {
         switch (c) {
             case ' ':
                 return justGround(boardCreator.createGround());
@@ -43,23 +48,24 @@ public interface MapParser<T> extends Function1<T, Try<Level>> {
                 return justGround(boardCreator.createWall());
             case '.':
                 Square pelletSquare = boardCreator.createGround();
-                levelCreator.createPellet().occupy(pelletSquare);
-                return justGround(pelletSquare);
+                Pellet pellet = levelCreator.createPellet(pelletSquare);
+                return Tuple.of(pelletSquare, List.empty(), List.of(pellet), Option.none());
             case 'G':
-                Ghost ghost = levelCreator.createGhost();
                 Square square = boardCreator.createGround();
-                ghost.occupy(square);
-                return Tuple.of(square, List.of(ghost), List.empty());
+                Ghost ghost = levelCreator.createGhost(square);
+                return Tuple.of(square, List.of(ghost), List.empty(), Option.none());
             case 'P':
                 Square ground = boardCreator.createGround();
-                return Tuple.of(ground, List.empty(), List.of(ground));
+                Player p = new PlayerFactory(new PacManSprites()).createPacMan(ground, Direction.EAST);
+                return Tuple.of(ground, List.empty(), List.empty(), Option.of(p));
             default:
                 throw new PacmanConfigurationException("Invalid character:" + c);
         }
     }
 
-    static Tuple3<Square, List<Ghost>, List<Square>> justGround(Square ground) {
-        return new Tuple3<>(ground, List.empty(), List.empty());
+
+    static Tuple4<Square, List<Ghost>, List<Pellet>, Option<Player>> justGround(Square ground) {
+        return Tuple.of(ground, List.empty(), List.empty(), Option.none());
     }
 
     static Function1<List<String>, Try<Level>> listMapParser(MapParser<List<List<Character>>> defaultParser) {

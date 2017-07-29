@@ -66,17 +66,14 @@ public class LevelFactory {
      *            The board with all ghosts and pellets occupying their squares.
      * @param ghosts
      *            A list of all ghosts on the board.
-     * @param startPositions
-     *            A list of squares from which players may start the game.
      * @return A new level for the board.
      */
-    public Level createLevel(Board board, List<Ghost> ghosts,
-                             List<Square> startPositions) {
+    public Level createLevel(Board board, List<Ghost> ghosts, List<Pellet> pellets, Player player) {
 
         // We'll adopt the simple collision map for now.
         CollisionMap collisionMap = new PlayerCollisions();
 
-        return new Level(board, ghosts, startPositions, collisionMap);
+        return new Level(player, board, ghosts, pellets ,collisionMap);
     }
 
     /**
@@ -84,20 +81,20 @@ public class LevelFactory {
      *
      * @return The new ghost.
      */
-    Ghost createGhost() {
+    Ghost createGhost(Square square) {
         ghostIndex++;
         ghostIndex %= GHOSTS;
         switch (ghostIndex) {
             case BLINKY:
-                return ghostFact.createBlinky();
+                return ghostFact.createBlinky(square, Direction.EAST);
             case INKY:
-                return ghostFact.createInky();
+                return ghostFact.createInky(square, Direction.EAST);
             case PINKY:
-                return ghostFact.createPinky();
+                return ghostFact.createPinky(square, Direction.EAST);
             case CLYDE:
-                return ghostFact.createClyde();
+                return ghostFact.createClyde(square, Direction.EAST);
             default:
-                return new RandomGhost(sprites.getGhostSprite(GhostColor.RED));
+                return new RandomGhost(square, Direction.EAST, sprites.getGhostSprite(GhostColor.RED));
         }
     }
 
@@ -106,8 +103,8 @@ public class LevelFactory {
      *
      * @return The new pellet.
      */
-    public Pellet createPellet() {
-        return new Pellet(PELLET_VALUE, sprites.getPelletSprite());
+    public Pellet createPellet(Square square) {
+        return new Pellet(square, PELLET_VALUE, sprites.getPelletSprite());
     }
 
     /**
@@ -128,13 +125,18 @@ public class LevelFactory {
          * @param ghostSprite
          *            The sprite for the ghost.
          */
-        RandomGhost(Map<Direction, Sprite> ghostSprite) {
-            super(ghostSprite, (int) DELAY, 0);
+        RandomGhost(Square square, Direction direction, Map<Direction, Sprite> ghostSprite) {
+            super(square, direction, ghostSprite, (int) DELAY, 0);
         }
 
         @Override
         public Direction nextMove() {
             return randomMove();
+        }
+
+        @Override
+        public Ghost movedTo(Square square, Direction direction) {
+            return new RandomGhost(square, direction, sprites);
         }
     }
 }

@@ -12,10 +12,8 @@ import java.util.function.Predicate;
 import io.vavr.Tuple;
 import io.vavr.collection.List;
 import io.vavr.collection.Stream;
-import nl.tudelft.jpacman.board.Board;
-import nl.tudelft.jpacman.board.Direction;
-import nl.tudelft.jpacman.board.Square;
-import nl.tudelft.jpacman.board.Unit;
+import io.vavr.collection.Vector;
+import nl.tudelft.jpacman.board.*;
 import nl.tudelft.jpacman.npc.ghost.Ghost;
 
 /**
@@ -31,6 +29,8 @@ public class Level {
      * The board of this level.
      */
     private final Board board;
+    private final Vector<Ghost> ghosts;
+    private final Vector<Pellet> pellets;
 
     /**
      * The lock that ensures moves are executed sequential.
@@ -50,24 +50,14 @@ public class Level {
 
     /**
      * <code>true</code> iff this level is currently in progress, i.e. players
-     * and NPCs can move.
+     * and NPCs can movedTo.
      */
     private boolean inProgress;
 
     /**
-     * The squares from which players can start this game.
-     */
-    private final List<Square> startSquares;
-
-    /**
-     * The start current selected starting square.
-     */
-    private int startSquareIndex;
-
-    /**
      * The players on this level.
      */
-    private List<Player> players;
+    public Player player;
 
     /**
      * The table of possible collisions between units.
@@ -86,23 +76,17 @@ public class Level {
      *            The board for the level.
      * @param ghosts
      *            The ghosts on the board.
-     * @param startPositions
-     *            The squares on which players start on this board.
      * @param collisionMap
      *            The collection of collisions that should be handled.
      */
-    public Level(Board board, List<Ghost> ghosts, List<Square> startPositions,
+    public Level(Player player, Board board, List<Ghost> ghosts, List<Pellet> pellets,
                  CollisionMap collisionMap) {
-        assert board != null;
-        assert ghosts != null;
-        assert startPositions != null;
-
         this.board = board;
+        this.ghosts = ghosts.toVector();
+        this.pellets = pellets.toVector();
         this.inProgress = false;
         this.npcs = ghosts.toJavaMap(g -> Tuple.of(g, null));
-        this.startSquares = startPositions;
-        this.startSquareIndex = 0;
-        this.players = List.empty();
+        this.player = player;
         this.collisions = collisionMap;
         this.observers = new HashSet<>();
     }
@@ -127,27 +111,6 @@ public class Level {
         observers.remove(observer);
     }
 
-    /**
-     * Registers a player on this level, assigning him to a starting position. A
-     * player can only be registered once, registering a player again will have
-     * no effect.
-     *
-     * @param player
-     *            The player to register.
-     */
-    public void registerPlayer(Player player) {
-        assert player != null;
-        assert !startSquares.isEmpty();
-
-        if (players.contains(player)) {
-            return;
-        }
-        this.players = players.prepend(player);
-        Square square = startSquares.get(startSquareIndex);
-        player.occupy(square);
-        startSquareIndex++;
-        startSquareIndex %= startSquares.size();
-    }
 
     /**
      * Returns the board of this level.
@@ -163,27 +126,24 @@ public class Level {
      * collisions.
      *
      * @param unit
-     *            The unit to move.
+     *            The unit to movedTo.
      * @param direction
-     *            The direction to move the unit in.
+     *            The direction to movedTo the unit in.
      */
-    private <T extends Unit> void move(T unit, Direction direction, Predicate<Square> collisionCondition) {
+    private <T extends MovableUnit> void move(T unit, Direction direction, Predicate<Square> collisionCondition) {
         assert unit != null;
-        assert direction != null;
-        assert unit.hasSquare();
 
         if (!isInProgress()) {
             return;
         }
 
         synchronized (moveLock) {
-            unit.setDirection(direction);
-            Square location = unit.getSquare();
+            Square location = unit.square;
             Square destination = location.getSquareAt(direction);
+            MovableUnit movedUnit = unit.movedTo(destination, direction);
 
             if (destination.isAccessibleTo(unit)) {
                 java.util.List<Unit> occupants = destination.getOccupants();
-                unit.occupy(destination);
                 if(collisionCondition.test(destination)) {
                     for (Unit occupant : occupants) {
                         collisions.collide(unit, occupant);
@@ -195,7 +155,7 @@ public class Level {
     }
     
     public void move(Ghost ghost, Direction direction) {
-        move(ghost, direction, destination -> players.exists(p -> p.getSquare().equals(destination)));
+        move(ghost, direction, destination -> player.square.equals(destination));
     }
 
     public void move(Player player, Direction direction) {
@@ -291,7 +251,7 @@ public class Level {
      *         alive.
      */
     public boolean isAnyPlayerAlive() {
-        return players.exists(Player::isAlive);
+        return player.isAlive();
     }
 
     /**
@@ -301,6 +261,10 @@ public class Level {
      */
     public int remainingPellets() {
         return getBoard().remainingPellets();
+    }
+
+    public Vector<Unit> getAllUnits() {
+        return Vector.<Unit>empty().appendAll(ghosts).appendAll(pellets).append(player);
     }
 
     /**
@@ -316,7 +280,7 @@ public class Level {
         private final ScheduledExecutorService service;
 
         /**
-         * The NPC to move.
+         * The NPC to movedTo.
          */
         private final Ghost npc;
 
@@ -326,7 +290,7 @@ public class Level {
          * @param service
          *            The service that executes the task.
          * @param npc
-         *            The NPC to move.
+         *            The NPC to movedTo.
          */
         NpcMoveTask(ScheduledExecutorService service, Ghost npc) {
             this.service = service;

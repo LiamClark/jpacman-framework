@@ -3,7 +3,8 @@ package nl.tudelft.jpacman.level;
 import java.util.Map;
 
 import nl.tudelft.jpacman.board.Direction;
-import nl.tudelft.jpacman.board.Unit;
+import nl.tudelft.jpacman.board.MovableUnit;
+import nl.tudelft.jpacman.board.Square;
 import nl.tudelft.jpacman.sprite.AnimatedSprite;
 import nl.tudelft.jpacman.sprite.Sprite;
 
@@ -12,7 +13,7 @@ import nl.tudelft.jpacman.sprite.Sprite;
  *
  * @author Jeroen Roosen 
  */
-public class Player extends Unit {
+public class Player extends MovableUnit {
 
     /**
      * The amount of points accumulated by this player.
@@ -42,12 +43,18 @@ public class Player extends Unit {
      * @param deathAnimation
      *            The sprite to be shown when this player dies.
      */
-    protected Player(Map<Direction, Sprite> spriteMap, AnimatedSprite deathAnimation) {
+    protected Player(Square square, Direction direction, Map<Direction, Sprite> spriteMap, AnimatedSprite deathAnimation) {
+        super(square, direction);
         this.score = 0;
         this.alive = true;
         this.sprites = spriteMap;
         this.deathSprite = deathAnimation;
         deathSprite.setAnimating(false);
+    }
+
+    @Override
+    public MovableUnit movedTo(Square square, Direction direction) {
+        return new Player(square, direction, sprites, deathSprite);
     }
 
     /**
@@ -87,7 +94,7 @@ public class Player extends Unit {
     @Override
     public Sprite getSprite() {
         if (isAlive()) {
-            return sprites.get(getDirection());
+            return sprites.get(direction);
         }
         return deathSprite;
     }

@@ -20,10 +20,10 @@ public abstract class Ghost extends NPC {
     /**
      * The sprite map, one sprite for each direction.
      */
-    private final Map<Direction, Sprite> sprites;
+    protected final Map<Direction, Sprite> sprites;
 
     /**
-     * The base move interval of the ghost.
+     * The base movedTo interval of the ghost.
      */
     private final int moveInterval;
 
@@ -42,15 +42,19 @@ public abstract class Ghost extends NPC {
      * @param intervalVariation
      *            The variation of the interval.
      */
-    protected Ghost(Map<Direction, Sprite> spriteMap, int moveInterval, int intervalVariation) {
+    protected Ghost(Square square , Direction direction, Map<Direction, Sprite> spriteMap, int moveInterval, int intervalVariation) {
+        super(square, direction);
         this.sprites = spriteMap;
         this.intervalVariation = intervalVariation;
         this.moveInterval = moveInterval;
     }
 
     @Override
+    public abstract Ghost movedTo(Square square, Direction direction);
+
+    @Override
     public Sprite getSprite() {
-        return sprites.get(getDirection());
+        return sprites.get(direction);
     }
 
     @Override
@@ -59,13 +63,12 @@ public abstract class Ghost extends NPC {
     }
 
     /**
-     * Determines a possible move in a random direction.
+     * Determines a possible movedTo in a random direction.
      *
-     * @return A direction in which the ghost can move, or <code>null</code> if
+     * @return A direction in which the ghost can movedTo, or <code>null</code> if
      *         the ghost is shut in by inaccessible squares.
      */
      protected Direction randomMove() {
-        Square square = getSquare();
         List<Direction> directions = new ArrayList<>();
         for (Direction direction : Direction.values()) {
             if (square.getSquareAt(direction).isAccessibleTo(this)) {

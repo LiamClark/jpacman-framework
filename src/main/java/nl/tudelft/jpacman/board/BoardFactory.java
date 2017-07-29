@@ -109,36 +109,4 @@ public class BoardFactory {
         }
     }
 
-    /**
-     * A ground square is a square that is accessible to anyone.
-     *
-     * @author Jeroen Roosen
-     */
-    private static final class Ground extends Square {
-
-        /**
-         * The background for this square.
-         */
-        private final Sprite background;
-
-        /**
-         * Creates a new ground square.
-         *
-         * @param sprite
-         *            The background for the square.
-         */
-        Ground(Sprite sprite) {
-            this.background = sprite;
-        }
-
-        @Override
-        public boolean isAccessibleTo(Unit unit) {
-            return true;
-        }
-
-        @Override
-        public Sprite getSprite() {
-            return background;
-        }
-    }
 }

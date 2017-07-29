@@ -68,7 +68,8 @@ public class PlayerCollisions implements CollisionMap {
      * @param pellet The pellet involved in the collision.
      */
     public void playerVersusPellet(Player player, Pellet pellet) {
-        pellet.leaveSquare();
+//        TODO make the game remove the entity.
+//        pellet.leaveSquare();
         player.addPoints(pellet.getValue());
     }
 

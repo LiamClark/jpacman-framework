@@ -121,7 +121,7 @@ class NavigationTest {
             .getBoard();
         Square s1 = b.squareAt(1, 1);
         Square s2 = b.squareAt(2, 1);
-        Option<Square> result = Navigation.findNearest(Pellet.class, s1).map(Unit::getSquare);
+        Option<Square> result = Navigation.findNearest(Pellet.class, s1).map(u -> u.square);
         assertThat(result.get()).isEqualTo(s2);
     }
 
@@ -132,7 +132,7 @@ class NavigationTest {
     void testNoNearestUnit() {
         Board b = parser.apply(List.of(" ")).get().getBoard();
         Square s1 = b.squareAt(0, 0);
-        Option<Unit> unit = Navigation.findNearest(Pellet.class, s1);
+        Option<Pellet> unit = Navigation.findNearest(Pellet.class, s1);
         assertThat(unit).isEmpty();
     }
 
@@ -144,7 +144,7 @@ class NavigationTest {
     void testFullSizedLevel() {
         Board b = MapParser.resourceMapParser(defaultParser).apply("/board.txt").get().getBoard();
         Square s1 = b.squareAt(1, 1);
-        Option<Unit> unit = Navigation.findNearest(Ghost.class, s1);
+        Option<Ghost> unit = Navigation.findNearest(Ghost.class, s1);
         assertThat(unit).isNotNull();
     }
 }

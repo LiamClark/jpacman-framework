@@ -44,6 +44,8 @@ class LevelTest {
      */
     private final Board board = mock(Board.class);
 
+    private final Player player = mock(Player.class);
+
     /**
      * The collision map.
      */
@@ -56,8 +58,7 @@ class LevelTest {
     @BeforeEach
     void setUp() {
         final long defaultInterval = 100L;
-        level = new Level(board, List.of(ghost), List.of(
-            square1, square2), collisions);
+        level = new Level(player, board, List.of(ghost), List.empty() ,collisions);
         when(ghost.getInterval()).thenReturn(defaultInterval);
     }
 
@@ -95,59 +96,5 @@ class LevelTest {
         level.start();
         level.stop();
         assertThat(level.isInProgress()).isFalse();
-    }
-
-    /**
-     * Verifies registering a player puts the player on the correct starting
-     * square.
-     */
-    @Test
-    @SuppressWarnings("PMD.JUnitTestsShouldIncludeAssert")
-    void registerPlayer() {
-        Player p = mock(Player.class);
-        level.registerPlayer(p);
-        verify(p).occupy(square1);
-    }
-
-    /**
-     * Verifies registering a player twice does not do anything.
-     */
-    @Test
-    @SuppressWarnings("PMD.JUnitTestsShouldIncludeAssert")
-    void registerPlayerTwice() {
-        Player p = mock(Player.class);
-        level.registerPlayer(p);
-        level.registerPlayer(p);
-        verify(p, times(1)).occupy(square1);
-    }
-
-    /**
-     * Verifies registering a second player puts that player on the correct
-     * starting square.
-     */
-    @Test
-    @SuppressWarnings("PMD.JUnitTestsShouldIncludeAssert")
-    void registerSecondPlayer() {
-        Player p1 = mock(Player.class);
-        Player p2 = mock(Player.class);
-        level.registerPlayer(p1);
-        level.registerPlayer(p2);
-        verify(p2).occupy(square2);
-    }
-
-    /**
-     * Verifies registering a third player puts the player on the correct
-     * starting square.
-     */
-    @Test
-    @SuppressWarnings("PMD.JUnitTestsShouldIncludeAssert")
-    void registerThirdPlayer() {
-        Player p1 = mock(Player.class);
-        Player p2 = mock(Player.class);
-        Player p3 = mock(Player.class);
-        level.registerPlayer(p1);
-        level.registerPlayer(p2);
-        level.registerPlayer(p3);
-        verify(p3).occupy(square1);
     }
 }

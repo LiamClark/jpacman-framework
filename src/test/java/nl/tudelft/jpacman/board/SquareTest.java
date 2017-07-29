@@ -23,7 +23,7 @@ class SquareTest {
      */
     @BeforeEach
     void setUp() {
-        square = new BasicSquare();
+        square = new Ground(null);
     }
 
     /**

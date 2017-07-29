@@ -32,7 +32,7 @@ import nl.tudelft.jpacman.sprite.Sprite;
  * extends that line twice as far. Therefore, if Bashful is alongside Shadow
  * when they are behind Pac-Man, Bashful will usually follow Shadow the whole
  * time. But if Bashful is in front of Pac-Man when Shadow is far behind him,
- * Bashful tends to want to move away from Pac-Man (in reality, to a point very
+ * Bashful tends to want to movedTo away from Pac-Man (in reality, to a point very
  * far ahead of Pac-Man). Bashful is affected by a similar targeting bug that
  * affects Speedy. When Pac-Man is moving or facing up, the spot Bashful uses to
  * draw the line is two squares above and left of Pac-Man.
@@ -62,16 +62,20 @@ public class Inky extends Ghost {
     /**
      * Creates a new "Inky", a.k.a. Bashful.
      *
-     * @param spriteMap
-     *            The sprites for this ghost.
+     * @param spriteMap The sprites for this ghost.
      */
-    public Inky(Map<Direction, Sprite> spriteMap) {
-        super(spriteMap, MOVE_INTERVAL, INTERVAL_VARIATION);
+    public Inky(Square square, Direction direction, Map<Direction, Sprite> spriteMap) {
+        super(square, direction, spriteMap, MOVE_INTERVAL, INTERVAL_VARIATION);
+    }
+
+    @Override
+    public Inky movedTo(Square square, Direction direction) {
+        return new Inky(square, direction, sprites);
     }
 
     /**
      * {@inheritDoc}
-     *
+     * <p>
      * <p>
      * Bashful has the most complicated AI of all. When the ghosts are not
      * patrolling their home corners, Bashful considers two things: Shadow's
@@ -80,13 +84,13 @@ public class Inky extends Ghost {
      * Pac-Man and extends that line twice as far. Therefore, if Bashful is
      * alongside Shadow when they are behind Pac-Man, Bashful will usually
      * follow Shadow the whole time. But if Bashful is in front of Pac-Man when
-     * Shadow is far behind him, Bashful tends to want to move away from Pac-Man
+     * Shadow is far behind him, Bashful tends to want to movedTo away from Pac-Man
      * (in reality, to a point very far ahead of Pac-Man). Bashful is affected
      * by a similar targeting bug that affects Speedy. When Pac-Man is moving or
      * facing up, the spot Bashful uses to draw the line is two squares above
      * and left of Pac-Man.
      * </p>
-     *
+     * <p>
      * <p>
      * <b>Implementation:</b> by lack of a coordinate system there is a
      * workaround: first determine the square of Blinky (A) and the square 2
@@ -98,35 +102,24 @@ public class Inky extends Ghost {
     // CHECKSTYLE:OFF To keep this more readable.
     @Override
     public Direction nextMove() {
-        assert hasSquare();
 
-        Option<Square> blinkyLocation = Navigation.findNearest(Blinky.class, getSquare())
-            .map(Unit::getSquare);
-        Option<Unit> player = Navigation.findNearest(Player.class, getSquare());
+        Option<Square> blinkyLocation = Navigation.findNearest(Blinky.class, square)
+            .map(u -> u.square);
+        Option<Player> player = Navigation.findNearest(Player.class, square);
 
         return player.flatMap(p -> {
-            Direction targetDirection = p.getDirection();
-            Square playerDestination = p.getSquare();
+            Square playerDestination = p.square;
 
-            Square finalDestination = Stream.continually(targetDirection)
+            Square finalDestination = Stream.continually(p.direction)
                 .take(SQUARES_AHEAD)
                 .foldRight(playerDestination, (direction, sq) -> sq.getSquareAt(direction));
 
             return blinkyLocation.flatMap(b -> Navigation.shortestPath(b, finalDestination, null))
                 .map(dirs -> Stream.ofAll(dirs).foldRight(playerDestination, (direction, sq) -> sq.getSquareAt(direction)))
-                .flatMap(dest -> (Navigation.shortestPath(getSquare(), dest, this)))
+                .flatMap(dest -> (Navigation.shortestPath(square, dest, this)))
                 .map(Vector::ofAll)
                 .flatMap(Vector::headOption);
-
         }).getOrElse(randomMove());
     }
     // CHECKSTYLE:ON
-
-    public static <A, B, U> Option<U> lift2(Option<A> a, Option<B> b, Function2<A,B, U> both) {
-        return a.flatMap(a1 -> b.map(b1 -> both.apply(a1, b1)));
-    }
-
-    public static <A, B, U> Option<U> bind2(Option<A> a, Option<B> b, Function2<A,B, Option<U>> both) {
-        return a.flatMap(a1 -> b.flatMap(b1 -> both.apply(a1, b1)));
-    }
 }

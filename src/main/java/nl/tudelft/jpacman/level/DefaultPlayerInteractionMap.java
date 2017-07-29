@@ -37,7 +37,8 @@ public class DefaultPlayerInteractionMap implements CollisionMap {
 
         collisionMap.onCollision(Player.class, Pellet.class,
             (player, pellet) -> {
-                pellet.leaveSquare();
+            //TODO reimplemen this behaviour in entity lists.
+//                pellet.leaveSquare();
                 player.addPoints(pellet.getValue());
             });
         return collisionMap;

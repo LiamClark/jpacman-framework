@@ -83,7 +83,7 @@ public final class Navigation {
      * @return The nearest unit of the given type, or <code>null</code> if no
      *         such unit could be found.
      */
-    public static Option<Unit> findNearest(Class<? extends Unit> type,
+    public static <T extends  Unit> Option<T> findNearest(Class<T> type,
                                              Square currentLocation) {
         ArrayList<Square> toDo = new ArrayList<>();
         Set<Square> visited = new HashSet<>();
@@ -92,7 +92,7 @@ public final class Navigation {
 
         while (!toDo.isEmpty()) {
             Square square = toDo.remove(0);
-            Option<Unit> unit = findUnit(type, square);
+            Option<T> unit = findUnit(type, square);
             if (unit.isDefined()) {
                 return unit;
             }
@@ -114,8 +114,8 @@ public final class Navigation {
      * @return A unit of type T, iff such a unit occupies this square, or
      *         <code>null</code> of none does.
      */
-    public static Option<Unit> findUnit(Class<? extends Unit> type, Square square) {
-        return Stream.ofAll(square.getOccupants()).find(type::isInstance);
+    public static <T extends Unit> Option<T> findUnit(Class<T> type, Square square) {
+        return Stream.ofAll(square.getOccupants()).find(type::isInstance).map(u -> (T) u);
     }
 
     /**

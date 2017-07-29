@@ -1,5 +1,7 @@
 package nl.tudelft.jpacman.npc.ghost;
 
+import nl.tudelft.jpacman.board.Direction;
+import nl.tudelft.jpacman.board.Square;
 import nl.tudelft.jpacman.sprite.PacManSprites;
 
 /**
@@ -29,8 +31,8 @@ public class GhostFactory {
      * @see Blinky
      * @return A new Blinky.
      */
-    public Ghost createBlinky() {
-        return new Blinky(sprites.getGhostSprite(GhostColor.RED));
+    public Ghost createBlinky(Square square, Direction direction) {
+        return new Blinky(square, direction, sprites.getGhostSprite(GhostColor.RED));
     }
 
     /**
@@ -39,8 +41,8 @@ public class GhostFactory {
      * @see Pinky
      * @return A new Pinky.
      */
-    public Ghost createPinky() {
-        return new Pinky(sprites.getGhostSprite(GhostColor.PINK));
+    public Ghost createPinky(Square square, Direction direction) {
+        return new Pinky(square, direction, sprites.getGhostSprite(GhostColor.PINK));
     }
 
     /**
@@ -49,8 +51,8 @@ public class GhostFactory {
      * @see Inky
      * @return A new Inky.
      */
-    public Ghost createInky() {
-        return new Inky(sprites.getGhostSprite(GhostColor.CYAN));
+    public Ghost createInky(Square square, Direction direction) {
+        return new Inky(square, direction, sprites.getGhostSprite(GhostColor.CYAN));
     }
 
     /**
@@ -59,7 +61,7 @@ public class GhostFactory {
      * @see Clyde
      * @return A new Clyde.
      */
-    public Ghost createClyde() {
-        return new Clyde(sprites.getGhostSprite(GhostColor.ORANGE));
+    public Ghost createClyde(Square square, Direction direction) {
+        return new Clyde(square, direction, sprites.getGhostSprite(GhostColor.ORANGE));
     }
 }

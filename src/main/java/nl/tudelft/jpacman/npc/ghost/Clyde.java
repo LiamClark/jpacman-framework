@@ -30,7 +30,7 @@ import nl.tudelft.jpacman.sprite.Sprite;
  * <b>AI:</b> Pokey has two basic AIs, one for when he's far from Pac-Man, and
  * one for when he is near to Pac-Man. When the ghosts are not patrolling their
  * home corners, and Pokey is far away from Pac-Man (beyond eight grid spaces),
- * Pokey behaves very much like Blinky, trying to move to Pac-Man's exact
+ * Pokey behaves very much like Blinky, trying to movedTo to Pac-Man's exact
  * location. However, when Pokey gets within eight grid spaces of Pac-Man, he
  * automatically changes his behavior and goes to patrol his home corner in the
  * bottom-left section of the maze.
@@ -77,8 +77,13 @@ public class Clyde extends Ghost {
      * @param spriteMap
      *            The sprites for this ghost.
      */
-    public Clyde(Map<Direction, Sprite> spriteMap) {
-        super(spriteMap, MOVE_INTERVAL, INTERVAL_VARIATION);
+    public Clyde(Square square, Direction direction, Map<Direction, Sprite> spriteMap) {
+        super(square, direction, spriteMap, MOVE_INTERVAL, INTERVAL_VARIATION);
+    }
+
+    @Override
+    public Clyde movedTo(Square square, Direction direction) {
+        return new Clyde(square, direction, sprites);
     }
 
     /**
@@ -88,23 +93,21 @@ public class Clyde extends Ghost {
      * Pokey has two basic AIs, one for when he's far from Pac-Man, and one for
      * when he is near to Pac-Man. When the ghosts are not patrolling their home
      * corners, and Pokey is far away from Pac-Man (beyond eight grid spaces),
-     * Pokey behaves very much like Blinky, trying to move to Pac-Man's exact
+     * Pokey behaves very much like Blinky, trying to movedTo to Pac-Man's exact
      * location. However, when Pokey gets within eight grid spaces of Pac-Man,
      * he automatically changes his behavior and goes to patrol his home corner
      * in the bottom-left section of the maze.
      * </p>
      * <p>
      * <b>Implementation:</b> Lacking a patrol function so far, Clyde will just
-     * move in the opposite direction when he gets within 8 cells of Pac-Man.
+     * movedTo in the opposite direction when he gets within 8 cells of Pac-Man.
      * </p>
      */
     @Override
     public Direction nextMove() {
-        assert hasSquare();
-
-        return Navigation.findNearest(Player.class, getSquare())
-            .map(Unit::getSquare)
-            .flatMap(target -> Navigation.shortestPath(getSquare(), target, this))
+        return Navigation.findNearest(Player.class, square)
+            .map(u -> u.square)
+            .flatMap(target -> Navigation.shortestPath(square, target, this))
             .map(Stream::ofAll)
             .flatMap(path -> {
                 Option<Direction> direction = path.headOption();

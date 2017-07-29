@@ -36,8 +36,8 @@ class BoardFactoryTest {
         PacManSprites sprites = mock(PacManSprites.class);
         factory = new BoardFactory(sprites);
 
-        s1 = new BasicSquare();
-        s2 = new BasicSquare();
+        s1 = new Ground(null);
+        s2 = new Ground(null);
     }
 
     /**

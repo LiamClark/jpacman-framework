@@ -73,7 +73,7 @@ public class Launcher {
      */
     public Game makeGame() {
         Level level = makeLevel();
-        game = new SinglePlayerGame(getPlayerFactory().createPacMan(), level);
+        game = new SinglePlayerGame(level);
         return game;
     }
 

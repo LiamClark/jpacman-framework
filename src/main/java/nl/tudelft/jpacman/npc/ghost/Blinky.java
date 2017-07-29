@@ -1,15 +1,13 @@
 package nl.tudelft.jpacman.npc.ghost;
 
-import java.util.List;
-import java.util.Map;
 
 import io.vavr.collection.Stream;
-import io.vavr.control.Option;
 import nl.tudelft.jpacman.board.Direction;
 import nl.tudelft.jpacman.board.Square;
-import nl.tudelft.jpacman.board.Unit;
 import nl.tudelft.jpacman.level.Player;
 import nl.tudelft.jpacman.sprite.Sprite;
+
+import java.util.Map;
 
 /**
  * <p>
@@ -30,15 +28,14 @@ import nl.tudelft.jpacman.sprite.Sprite;
  * will attempt to shorten the distance between Pac-Man and himself. If he has
  * to choose between shortening the horizontal or vertical distance, he will
  * choose to shorten whichever is greatest. For example, if Pac-Man is four grid
- * spaces to the left, and seven grid spaces above Blinky, he'll try to move up
+ * spaces to the left, and seven grid spaces above Blinky, he'll try to movedTo up
  * towards Pac-Man before he moves to the left.
  * </p>
  * <p>
  * Source: http://strategywiki.org/wiki/Pac-Man/Getting_Started
  * </p>
  *
- * @author Jeroen Roosen 
- *
+ * @author Jeroen Roosen
  */
 public class Blinky extends Ghost {
 
@@ -56,18 +53,17 @@ public class Blinky extends Ghost {
     /**
      * Creates a new "Blinky", a.k.a. "Shadow".
      *
-     * @param spriteMap
-     *            The sprites for this ghost.
+     * @param spriteMap The sprites for this ghost.
      */
     // TODO Blinky should speed up when there are a few pellets left, but he
     // has no way to find out how many there are.
-    public Blinky(Map<Direction, Sprite> spriteMap) {
-        super(spriteMap, MOVE_INTERVAL, INTERVAL_VARIATION);
+    public Blinky(Square square, Direction direction, Map<Direction, Sprite> spriteMap) {
+        super(square, direction, spriteMap, MOVE_INTERVAL, INTERVAL_VARIATION);
     }
 
     /**
      * {@inheritDoc}
-     *
+     * <p>
      * <p>
      * When the ghosts are not patrolling in their home corners (Blinky:
      * top-right, Pinky: top-left, Inky: bottom-right, Clyde: bottom-left),
@@ -75,19 +71,22 @@ public class Blinky extends Ghost {
      * If he has to choose between shortening the horizontal or vertical
      * distance, he will choose to shorten whichever is greatest. For example,
      * if Pac-Man is four grid spaces to the left, and seven grid spaces above
-     * Blinky, he'll try to move up towards Pac-Man before he moves to the left.
+     * Blinky, he'll try to movedTo up towards Pac-Man before he moves to the left.
      * </p>
      */
     @Override
     public Direction nextMove() {
-        assert hasSquare();
-
         // TODO Blinky should patrol his corner every once in a while
         // TODO Implement his actual behaviour instead of simply chasing.
-        return Navigation.findNearest(Player.class, getSquare())
-            .map(Unit::getSquare)
-            .flatMap(target -> Navigation.shortestPath(getSquare(), target, this))
+        return Navigation.findNearest(Player.class, square)
+            .map(u -> u.square)
+            .flatMap(target -> Navigation.shortestPath(square, target, this))
             .map(Stream::ofAll)
             .flatMap(Stream::headOption).getOrElse(randomMove());
+    }
+
+    @Override
+    public Blinky movedTo(Square square, Direction direction) {
+        return new Blinky(square, direction, this.sprites);
     }
 }

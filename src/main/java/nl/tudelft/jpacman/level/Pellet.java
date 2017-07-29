@@ -1,5 +1,6 @@
 package nl.tudelft.jpacman.level;
 
+import nl.tudelft.jpacman.board.Square;
 import nl.tudelft.jpacman.board.Unit;
 import nl.tudelft.jpacman.sprite.Sprite;
 
@@ -25,7 +26,8 @@ public class Pellet extends Unit {
      * @param points The point value of this pellet.
      * @param sprite The sprite of this pellet.
      */
-    public Pellet(int points, Sprite sprite) {
+    public Pellet(Square square, int points, Sprite sprite) {
+        super(square);
         this.image = sprite;
         this.value = points;
     }
