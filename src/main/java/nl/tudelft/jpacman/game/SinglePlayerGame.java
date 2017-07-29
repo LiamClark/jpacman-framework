@@ -31,7 +31,7 @@ public class SinglePlayerGame extends Game {
      *            The level.
      */
     public SinglePlayerGame(Level level) {
-        this.player = level.player;
+        this.player = level.getPlayer();
         this.level = level;
     }
 

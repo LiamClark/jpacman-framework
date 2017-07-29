@@ -69,11 +69,7 @@ public class LevelFactory {
      * @return A new level for the board.
      */
     public Level createLevel(Board board, List<Ghost> ghosts, List<Pellet> pellets, Player player) {
-
-        // We'll adopt the simple collision map for now.
-        CollisionMap collisionMap = new PlayerCollisions();
-
-        return new Level(player, board, ghosts, pellets ,collisionMap);
+        return new Level(player, board, ghosts, pellets);
     }
 
     /**

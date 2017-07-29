@@ -65,11 +65,11 @@ public class LauncherSmokeTest {
         assertThat(player.getScore()).isZero();
 
         // get points
-        game.move(player, Direction.EAST);
+        game.move(Direction.EAST);
         assertThat(player.getScore()).isEqualTo(10);
 
         // now moving back does not change the score
-        game.move(player, Direction.WEST);
+        game.move(Direction.WEST);
         assertThat(player.getScore()).isEqualTo(10);
 
         // try to movedTo as far as we can
@@ -107,9 +107,8 @@ public class LauncherSmokeTest {
      * @param numSteps The number of steps to take
      */
     public static void move(Game game, Direction dir, int numSteps) {
-        Player player = game.getPlayers().get(0);
         for (int i = 0; i < numSteps; i++) {
-            game.move(player, dir);
+            game.move(dir);
         }
     }
 }

@@ -11,7 +11,7 @@ import nl.tudelft.jpacman.sprite.Sprite;
 /**
  * A player operated unit in our game.
  *
- * @author Jeroen Roosen 
+ * @author Jeroen Roosen
  */
 public class Player extends MovableUnit {
 
@@ -35,6 +35,14 @@ public class Player extends MovableUnit {
      */
     private boolean alive;
 
+    private Player(Square square, Direction direction, int score, Map<Direction, Sprite> sprites, AnimatedSprite deathSprite, boolean alive) {
+        super(square, direction);
+        this.score = score;
+        this.sprites = sprites;
+        this.deathSprite = deathSprite;
+        this.alive = alive;
+    }
+
     /**
      * Creates a new player with a score of 0 points.
      *
@@ -53,8 +61,17 @@ public class Player extends MovableUnit {
     }
 
     @Override
-    public MovableUnit movedTo(Square square, Direction direction) {
+    public Player movedTo(Square square, Direction direction) {
         return new Player(square, direction, sprites, deathSprite);
+    }
+
+    public Player die() {
+        //todo apply death animation properly again.
+        return new Player(square, direction, score, sprites, deathSprite, false);
+    }
+
+    public Player scorePoints(int points) {
+        return new Player(square, direction, score + points, sprites, deathSprite, alive);
     }
 
     /**

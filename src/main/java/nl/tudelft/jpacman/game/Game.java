@@ -80,15 +80,13 @@ public abstract class Game implements LevelObserver {
     /**
      * Moves the specified player one square in the given direction.
      *
-     * @param player
-     *            The player to movedTo.
      * @param direction
      *            The direction to movedTo in.
      */
-    public void move(Player player, Direction direction) {
+    public void move(Direction direction) {
         if (isInProgress()) {
             // execute player movedTo.
-            getLevel().move(player, direction);
+            getLevel().movePlayer(direction);
         }
     }
 

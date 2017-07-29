@@ -89,11 +89,4 @@ public class Board {
     public boolean withinBorders(int x, int y) {
         return x >= 0 && x < getWidth() && y >= 0 && y < getHeight();
     }
-
-    public int remainingPellets() {
-        return board.flatMap(Function1.identity())
-            .flatMap(Square::getOccupants)
-            .filter(Predicates.instanceOf(Pellet.class))
-            .length();
-    }
 }

@@ -7,12 +7,13 @@ import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Predicate;
+import java.util.concurrent.atomic.AtomicReference;
 
 import io.vavr.Tuple;
 import io.vavr.collection.List;
 import io.vavr.collection.Stream;
 import io.vavr.collection.Vector;
+import io.vavr.control.Option;
 import nl.tudelft.jpacman.board.*;
 import nl.tudelft.jpacman.npc.ghost.Ghost;
 
@@ -29,8 +30,7 @@ public class Level {
      * The board of this level.
      */
     private final Board board;
-    private final Vector<Ghost> ghosts;
-    private final Vector<Pellet> pellets;
+    private final AtomicReference<Entities> entities;
 
     /**
      * The lock that ensures moves are executed sequential.
@@ -53,17 +53,6 @@ public class Level {
      * and NPCs can movedTo.
      */
     private boolean inProgress;
-
-    /**
-     * The players on this level.
-     */
-    public Player player;
-
-    /**
-     * The table of possible collisions between units.
-     */
-    private final CollisionMap collisions;
-
     /**
      * The objects observing this level.
      */
@@ -76,18 +65,12 @@ public class Level {
      *            The board for the level.
      * @param ghosts
      *            The ghosts on the board.
-     * @param collisionMap
-     *            The collection of collisions that should be handled.
      */
-    public Level(Player player, Board board, List<Ghost> ghosts, List<Pellet> pellets,
-                 CollisionMap collisionMap) {
+    public Level(Player player, Board board, List<Ghost> ghosts, List<Pellet> pellets) {
         this.board = board;
-        this.ghosts = ghosts.toVector();
-        this.pellets = pellets.toVector();
         this.inProgress = false;
         this.npcs = ghosts.toJavaMap(g -> Tuple.of(g, null));
-        this.player = player;
-        this.collisions = collisionMap;
+        this.entities = new AtomicReference<>(new Entities(pellets, ghosts.toVector(), player));
         this.observers = new HashSet<>();
     }
 
@@ -121,45 +104,22 @@ public class Level {
         return board;
     }
 
-    /**
-     * Moves the unit into the given direction if possible and handles all
-     * collisions.
-     *
-     * @param unit
-     *            The unit to movedTo.
-     * @param direction
-     *            The direction to movedTo the unit in.
-     */
-    private <T extends MovableUnit> void move(T unit, Direction direction, Predicate<Square> collisionCondition) {
-        assert unit != null;
 
-        if (!isInProgress()) {
-            return;
-        }
-
-        synchronized (moveLock) {
-            Square location = unit.square;
-            Square destination = location.getSquareAt(direction);
-            MovableUnit movedUnit = unit.movedTo(destination, direction);
-
-            if (destination.isAccessibleTo(unit)) {
-                java.util.List<Unit> occupants = destination.getOccupants();
-                if(collisionCondition.test(destination)) {
-                    for (Unit occupant : occupants) {
-                        collisions.collide(unit, occupant);
-                    }
-                }
-            }
-            updateObservers();
-        }
+    public Option<Square> targetLocation(Unit unit, Direction direction ) {
+        Square targetSquare = unit.square.getSquareAt(direction);
+        return Option.when(isInProgress() && targetSquare.isAccessibleTo(unit), targetSquare);
     }
     
     public void move(Ghost ghost, Direction direction) {
-        move(ghost, direction, destination -> player.square.equals(destination));
+        targetLocation(ghost, direction)
+            .map(sq -> entities.get().moveGhost(ghost, sq, direction))
+            .forEach(entities::set);
     }
 
-    public void move(Player player, Direction direction) {
-        move(player, direction, a -> true);
+    public void movePlayer(Direction direction) {
+        targetLocation(entities.get().player, direction)
+            .map(sq -> entities.get().movePlayer(sq, direction))
+            .forEach(entities::set);
     }
 
     /**
@@ -251,7 +211,11 @@ public class Level {
      *         alive.
      */
     public boolean isAnyPlayerAlive() {
-        return player.isAlive();
+        return entities.get().player.isAlive();
+    }
+
+    public Player getPlayer() {
+        return entities.get().player;
     }
 
     /**
@@ -260,11 +224,11 @@ public class Level {
      * @return The amount of pellets remaining on the board.
      */
     public int remainingPellets() {
-        return getBoard().remainingPellets();
+        return entities.get().remainingPellets();
     }
 
     public Vector<Unit> getAllUnits() {
-        return Vector.<Unit>empty().appendAll(ghosts).appendAll(pellets).append(player);
+        return entities.get().allUnits();
     }
 
     /**

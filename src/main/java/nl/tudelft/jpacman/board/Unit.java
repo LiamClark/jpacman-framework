@@ -17,6 +17,10 @@ public abstract class Unit {
     protected Unit(Square square) {
         this.square = square;
     }
+
+    public boolean occupies(Square square) {
+        return this.square.equals(square);
+    }
     /**
      * Returns the sprite of this unit.
      *
