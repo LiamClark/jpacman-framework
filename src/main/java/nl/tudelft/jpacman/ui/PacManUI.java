@@ -14,7 +14,11 @@ import javax.swing.JPanel;
 import javax.swing.WindowConstants;
 
 import io.reactivex.Observable;
+import io.vavr.Function1;
+import io.vavr.control.Option;
 import nl.tudelft.jpacman.game.Game;
+import nl.tudelft.jpacman.level.Entities;
+import nl.tudelft.jpacman.level.Events;
 import nl.tudelft.jpacman.ui.ScorePanel.ScoreFormatter;
 
 /**
@@ -53,6 +57,7 @@ public class PacManUI extends JFrame {
      * The panel displaying the game.
      */
     private final BoardPanel boardPanel;
+    private final Game game;
 
     /**
      * Creates a new UI for a JPac-Man game.
@@ -73,6 +78,7 @@ public class PacManUI extends JFrame {
                     final Map<Integer, Action> keyMappings,
                     ScoreFormatter scoreFormatter) {
         super("JPac-Man");
+        this.game = game;
         assert game != null;
         assert buttons != null;
         assert keyMappings != null;
@@ -130,6 +136,12 @@ public class PacManUI extends JFrame {
      * intervals.
      */
     public void start() {
+        Entities initialEntities = game.getLevel().currentEntities();
+        Observable<Function1<Entities, Option<Entities>>> entityEvents =
+            Events.allEntityEvents(this.keyEvents(), initialEntities);
+        Observable<Entities> states = entityEvents.scan(initialEntities, game.getLevel()::entityOperation);
+
+        states.subscribe(game.getLevel()::setCurrentEntities);
         setVisible(true);
         ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
         service.scheduleAtFixedRate(this::nextFrame, 0, FRAME_INTERVAL, TimeUnit.MILLISECONDS);

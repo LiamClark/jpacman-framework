@@ -1,22 +1,16 @@
 package nl.tudelft.jpacman.level;
 
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
-
 import io.vavr.Function1;
-import io.vavr.Tuple;
 import io.vavr.collection.List;
-import io.vavr.collection.Stream;
 import io.vavr.collection.Vector;
 import io.vavr.control.Option;
-import nl.tudelft.jpacman.board.*;
+import nl.tudelft.jpacman.board.Board;
+import nl.tudelft.jpacman.board.Unit;
 import nl.tudelft.jpacman.npc.ghost.Ghost;
+
+import java.util.HashSet;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * A level of Pac-Man. A level consists of the board with the players and the
@@ -34,20 +28,10 @@ public class Level {
     private final AtomicReference<Entities> entities;
 
     /**
-     * The lock that ensures moves are executed sequential.
-     */
-    private final Object moveLock = new Object();
-
-    /**
      * The lock that ensures starting and stopping can't interfere with each
      * other.
      */
     private final Object startStopLock = new Object();
-
-    /**
-     * The NPCs of this level and, if they are running, their schedules.
-     */
-    private final Map<Ghost, ScheduledExecutorService> npcs;
 
     /**
      * <code>true</code> iff this level is currently in progress, i.e. players
@@ -70,7 +54,6 @@ public class Level {
     public Level(Player player, Board board, List<Ghost> ghosts, List<Pellet> pellets) {
         this.board = board;
         this.inProgress = false;
-        this.npcs = ghosts.toJavaMap(g -> Tuple.of(g, null));
         this.entities = new AtomicReference<>(new Entities(pellets, ghosts.toVector(), player));
         this.observers = new HashSet<>();
     }
@@ -106,9 +89,9 @@ public class Level {
     }
 
     // no entity operation should be allowed when the level is not in progress
-    public Entities entityOperation(Function1<Entities, Entities> entityOperation, Entities entities) {
+    public Entities entityOperation(Entities entities, Function1<Entities, Option<Entities>> entityOperation) {
         if(this.isInProgress()) {
-            return entityOperation.apply(entities);
+            return entityOperation.apply(entities).getOrElse(entities);
         } else {
             return entities;
         }
@@ -123,7 +106,6 @@ public class Level {
             if (isInProgress()) {
                 return;
             }
-            startNPCs();
             inProgress = true;
             updateObservers();
         }
@@ -138,36 +120,10 @@ public class Level {
             if (!isInProgress()) {
                 return;
             }
-            stopNPCs();
             inProgress = false;
         }
     }
 
-    /**
-     * Starts all NPC movement scheduling.
-     */
-    private void startNPCs() {
-        for (final Ghost npc : Stream.ofAll(npcs.keySet())) {
-            ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
-
-            service.schedule(new NpcMoveTask(service, npc),
-                npc.getInterval() / 2, TimeUnit.MILLISECONDS);
-
-            npcs.put(npc, service);
-        }
-    }
-
-    /**
-     * Stops all NPC movement scheduling and interrupts any movements being
-     * executed.
-     */
-    private void stopNPCs() {
-        for (Entry<Ghost, ScheduledExecutorService> entry : npcs.entrySet()) {
-            ScheduledExecutorService schedule = entry.getValue();
-            assert schedule != null;
-            schedule.shutdownNow();
-        }
-    }
 
     /**
      * Returns whether this level is in progress, i.e. whether moves can be made
@@ -193,6 +149,14 @@ public class Level {
                 observer.levelWon();
             }
         }
+    }
+
+    public Entities currentEntities() {
+        return entities.get();
+    }
+
+    public void setCurrentEntities(Entities entities) {
+        this.entities.set(entities);
     }
 
     /**
@@ -221,47 +185,6 @@ public class Level {
 
     public Vector<Unit> getAllUnits() {
         return entities.get().allUnits();
-    }
-
-    /**
-     * A task that moves an NPC and reschedules itself after it finished.
-     *
-     * @author Jeroen Roosen
-     */
-    private final class NpcMoveTask implements Runnable {
-
-        /**
-         * The service executing the task.
-         */
-        private final ScheduledExecutorService service;
-
-        /**
-         * The NPC to movedTo.
-         */
-        private final Ghost npc;
-
-        /**
-         * Creates a new task.
-         *
-         * @param service
-         *            The service that executes the task.
-         * @param npc
-         *            The NPC to movedTo.
-         */
-        NpcMoveTask(ScheduledExecutorService service, Ghost npc) {
-            this.service = service;
-            this.npc = npc;
-        }
-
-        @Override
-        public void run() {
-            Direction nextMove = npc.nextMove();
-            if (nextMove != null) {
-
-            }
-            long interval = npc.getInterval();
-            service.schedule(this, interval, TimeUnit.MILLISECONDS);
-        }
     }
 
     /**
