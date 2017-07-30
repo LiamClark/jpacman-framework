@@ -2,6 +2,8 @@ package nl.tudelft.jpacman.ui;
 
 import java.awt.BorderLayout;
 import java.awt.Container;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -11,6 +13,7 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.WindowConstants;
 
+import io.reactivex.Observable;
 import nl.tudelft.jpacman.game.Game;
 import nl.tudelft.jpacman.ui.ScorePanel.ScoreFormatter;
 
@@ -95,6 +98,31 @@ public class PacManUI extends JFrame {
         contentPanel.add(boardPanel, BorderLayout.CENTER);
 
         pack();
+    }
+
+    /**
+     * bridge the swing key events to an observable.
+     * @return a cold infinite observable, with no respect for back pressure.
+     */
+    public Observable<KeyEvent> keyEvents() {
+        return Observable.create(sub -> {
+            addKeyListener(new KeyListener() {
+                @Override
+                public void keyPressed(KeyEvent e) {
+                    sub.onNext(e);
+                }
+
+                @Override
+                public void keyTyped(KeyEvent e) {
+                    //no-op
+                }
+
+                @Override
+                public void keyReleased(KeyEvent e) {
+                    //no-op
+                }
+            });
+        });
     }
 
     /**

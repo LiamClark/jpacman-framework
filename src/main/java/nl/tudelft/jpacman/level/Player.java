@@ -2,6 +2,7 @@ package nl.tudelft.jpacman.level;
 
 import java.util.Map;
 
+import io.vavr.control.Option;
 import nl.tudelft.jpacman.board.Direction;
 import nl.tudelft.jpacman.board.MovableUnit;
 import nl.tudelft.jpacman.board.Square;
@@ -72,6 +73,11 @@ public class Player extends MovableUnit {
 
     public Player scorePoints(int points) {
         return new Player(square, direction, score + points, sprites, deathSprite, alive);
+    }
+
+    public Option<Entities> movePlayer(Direction direction, Entities entities) {
+        return this.targetLocation(direction)
+            .map(sq -> entities.movePlayer(sq, direction));
     }
 
     /**

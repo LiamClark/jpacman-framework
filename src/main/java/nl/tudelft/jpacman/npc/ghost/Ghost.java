@@ -1,14 +1,15 @@
 package nl.tudelft.jpacman.npc.ghost;
 
 import io.vavr.collection.Array;
+import io.vavr.control.Option;
 import io.vavr.control.Try;
 import nl.tudelft.jpacman.board.Direction;
 import nl.tudelft.jpacman.board.Square;
+import nl.tudelft.jpacman.level.Entities;
 import nl.tudelft.jpacman.npc.NPC;
 import nl.tudelft.jpacman.sprite.Sprite;
 
 import java.util.Map;
-import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
@@ -55,9 +56,15 @@ public abstract class Ghost extends NPC {
         return sprites.get(direction);
     }
 
+    public Option<Entities> move(Entities entities) {
+        Direction direction = this.randomMove();
+        return this.targetLocation(direction)
+            .map(sq -> entities.moveGhost(this, sq, direction));
+    }
+
     @Override
     public long getInterval() {
-        return this.moveInterval + new Random().nextInt(this.intervalVariation);
+        return this.moveInterval + ThreadLocalRandom.current().nextInt(this.intervalVariation);
     }
 
     /**
@@ -70,7 +77,7 @@ public abstract class Ghost extends NPC {
         Array<Direction> directions = Array.of(Direction.values())
             .filter(d -> square.getSquareAt(d).isAccessibleTo(this));
         int i = ThreadLocalRandom.current().nextInt(directions.size());
-        
+
         return Try.ofCallable(() -> directions.get(i)).getOrElse(Direction.EAST);
     }
 }

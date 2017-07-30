@@ -9,6 +9,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
+import io.vavr.Function1;
 import io.vavr.Tuple;
 import io.vavr.collection.List;
 import io.vavr.collection.Stream;
@@ -104,22 +105,13 @@ public class Level {
         return board;
     }
 
-
-    public Option<Square> targetLocation(Unit unit, Direction direction ) {
-        Square targetSquare = unit.square.getSquareAt(direction);
-        return Option.when(isInProgress() && targetSquare.isAccessibleTo(unit), targetSquare);
-    }
-    
-    public void move(Ghost ghost, Direction direction) {
-        targetLocation(ghost, direction)
-            .map(sq -> entities.get().moveGhost(ghost, sq, direction))
-            .forEach(entities::set);
-    }
-
-    public void movePlayer(Direction direction) {
-        targetLocation(entities.get().player, direction)
-            .map(sq -> entities.get().movePlayer(sq, direction))
-            .forEach(entities::set);
+    // no entity operation should be allowed when the level is not in progress
+    public Entities entityOperation(Function1<Entities, Entities> entityOperation, Entities entities) {
+        if(this.isInProgress()) {
+            return entityOperation.apply(entities);
+        } else {
+            return entities;
+        }
     }
 
     /**
@@ -265,7 +257,7 @@ public class Level {
         public void run() {
             Direction nextMove = npc.nextMove();
             if (nextMove != null) {
-                move(npc, nextMove);
+
             }
             long interval = npc.getInterval();
             service.schedule(this, interval, TimeUnit.MILLISECONDS);

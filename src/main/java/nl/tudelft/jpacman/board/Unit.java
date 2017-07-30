@@ -1,5 +1,6 @@
 package nl.tudelft.jpacman.board;
 
+import io.vavr.control.Option;
 import nl.tudelft.jpacman.sprite.Sprite;
 
 /**
@@ -27,5 +28,10 @@ public abstract class Unit {
      * @return The sprite of this unit.
      */
     public abstract Sprite getSprite();
+
+    public Option<Square> targetLocation(Direction direction ) {
+        Square targetSquare = square.getSquareAt(direction);
+        return Option.when(targetSquare.isAccessibleTo(this), targetSquare);
+    }
 
 }
