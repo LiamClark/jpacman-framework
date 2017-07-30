@@ -14,6 +14,8 @@ import javax.swing.JPanel;
 import javax.swing.WindowConstants;
 
 import io.reactivex.Observable;
+import io.reactivex.Scheduler;
+import io.reactivex.schedulers.Schedulers;
 import io.vavr.Function1;
 import io.vavr.control.Option;
 import nl.tudelft.jpacman.game.Game;
@@ -141,7 +143,7 @@ public class PacManUI extends JFrame {
             Events.allEntityEvents(this.keyEvents(), initialEntities);
         Observable<Entities> states = entityEvents.scan(initialEntities, game.getLevel()::entityOperation);
 
-        states.subscribe(game.getLevel()::setCurrentEntities);
+        states.observeOn(Schedulers.io()).subscribe(game.getLevel()::setCurrentEntities);
         setVisible(true);
         ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
         service.scheduleAtFixedRate(this::nextFrame, 0, FRAME_INTERVAL, TimeUnit.MILLISECONDS);

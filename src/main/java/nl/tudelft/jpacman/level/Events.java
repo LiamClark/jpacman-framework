@@ -1,7 +1,10 @@
 package nl.tudelft.jpacman.level;
 
+import io.reactivex.Flowable;
 import io.reactivex.Observable;
 import io.reactivex.ObservableTransformer;
+import io.reactivex.Scheduler;
+import io.reactivex.schedulers.Schedulers;
 import io.vavr.Function1;
 import io.vavr.collection.Vector;
 import io.vavr.control.Option;
@@ -14,16 +17,24 @@ import java.util.concurrent.TimeUnit;
 
 public class Events {
     /**
+     * Flowable is used here, because otherwise concat map will try to consume
+     * the entire infinite sequence.
+     *
      * @param ghost the ghost to generate movement events for
      * @param index the index of the ghost in the entities vector
-     * @return an observable that will provice move timing events for the specified ghost
+     * @return a flowable that will provide move timing events for the specified ghost
      * with the same behaviour as the NpcMoveTaks in jpacman 7.
      */
-    public static Observable<Integer> ghostMovementEvents(Ghost ghost, int index) {
-        //we reuse the first version of the ghost here but since the ghosts offsets are constant it shouldn't matter
-        return Observable.timer(ghost.getInterval(), TimeUnit.MILLISECONDS)
-            .concatMap(t -> Observable.defer(() -> ghostMovementEvents(ghost, index)))
+    public static Flowable<Integer> ghostMovementEvents(Ghost ghost, int index, Scheduler scheduler) {
+        Flowable<Long> intervals = Flowable.<Long>generate(em -> em.onNext(ghost.getInterval()))
+            .subscribeOn(scheduler);
+        return intervals
+            .concatMap(interval -> Flowable.defer(() -> Flowable.timer(interval, TimeUnit.MILLISECONDS, scheduler)))
             .map(t -> index);
+    }
+
+    public static Observable<Integer> ghostMovementEvents(Ghost ghost, int index) {
+        return ghostMovementEvents(ghost, index, Schedulers.computation()).toObservable();
     }
 
     public static Observable<Function1<Entities, Option<Entities>>> allEntityEvents(Observable<KeyEvent> playerEvents, Entities initial) {
