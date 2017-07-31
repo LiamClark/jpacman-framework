@@ -1,6 +1,6 @@
 package nl.tudelft.jpacman.level;
 
-import com.google.common.collect.Iterables;
+import io.vavr.Lazy;
 import io.vavr.Tuple;
 import io.vavr.Tuple2;
 import io.vavr.collection.List;
@@ -17,17 +17,24 @@ public class Entities {
     public final Map<Square, Pellet> pellets;
     public final Vector<Ghost> ghosts;
     public final Player player;
+    public final Lazy<Map<Square, Vector<Unit>>> occupations;
 
     public Entities(List<Pellet> pellets, Vector<Ghost> ghosts, Player player) {
         this.pellets = pellets.toMap(p -> p.square, identity());
         this.ghosts = ghosts;
         this.player = player;
+        this.occupations = Lazy.of(this::findOccupations);
     }
 
     private Entities(Map<Square, Pellet> pellets, Vector<Ghost> ghosts, Player player) {
         this.pellets = pellets;
         this.ghosts = ghosts;
         this.player = player;
+        this.occupations = Lazy.of(this::findOccupations);
+    }
+
+    private Map<Square, Vector<Unit>> findOccupations() {
+        return this.allUnits().groupBy(u -> u.square);
     }
 
     public Vector<Unit> allUnits() {

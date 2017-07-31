@@ -18,11 +18,6 @@ import nl.tudelft.jpacman.sprite.Sprite;
 public abstract class Square {
 
     /**
-     * The units occupying this square, in order of appearance.
-     */
-    private final List<Unit> occupants;
-
-    /**
      * The collection of squares adjacent to this square.
      */
     private final Map<Direction, Square> neighbours;
@@ -31,7 +26,6 @@ public abstract class Square {
      * Creates a new, empty square.
      */
     protected Square() {
-        this.occupants = new ArrayList<>();
         this.neighbours = new EnumMap<>(Direction.class);
     }
 
@@ -58,42 +52,6 @@ public abstract class Square {
     public void link(Square neighbour, Direction direction) {
         neighbours.put(direction, neighbour);
     }
-
-    /**
-     * Returns an immutable list of units occupying this square, in the order in
-     * which they occupied this square (i.e. oldest first.)
-     *
-     * @return An immutable list of units occupying this square, in the order in
-     *         which they occupied this square (i.e. oldest first.)
-     */
-    public List<Unit> getOccupants() {
-        return ImmutableList.copyOf(occupants);
-    }
-
-    /**
-     * Adds a new occupant to this square.
-     *
-     * @param occupant
-     *            The unit to occupy this square.
-     */
-    void put(Unit occupant) {
-        assert occupant != null;
-        assert !occupants.contains(occupant);
-
-        occupants.add(occupant);
-    }
-
-    /**
-     * Removes the unit from this square if it was present.
-     *
-     * @param occupant
-     *            The unit to be removed from this square.
-     */
-    void remove(Unit occupant) {
-        assert occupant != null;
-        occupants.remove(occupant);
-    }
-
 
     /**
      * Determines whether the unit is allowed to occupy this square.

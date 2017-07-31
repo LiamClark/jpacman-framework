@@ -4,6 +4,7 @@ package nl.tudelft.jpacman.npc.ghost;
 import io.vavr.collection.Stream;
 import nl.tudelft.jpacman.board.Direction;
 import nl.tudelft.jpacman.board.Square;
+import nl.tudelft.jpacman.level.Entities;
 import nl.tudelft.jpacman.level.Player;
 import nl.tudelft.jpacman.sprite.Sprite;
 
@@ -75,10 +76,10 @@ public class Blinky extends Ghost {
      * </p>
      */
     @Override
-    public Direction nextMove() {
+    public Direction nextMove(Entities entities) {
         // TODO Blinky should patrol his corner every once in a while
         // TODO Implement his actual behaviour instead of simply chasing.
-        return Navigation.findNearest(Player.class, square)
+        return Navigation.findNearest(Player.class, square, entities)
             .map(u -> u.square)
             .flatMap(target -> Navigation.shortestPath(square, target, this))
             .map(Stream::ofAll)

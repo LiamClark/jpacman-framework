@@ -57,7 +57,7 @@ public abstract class Ghost extends NPC {
     }
 
     public Option<Entities> move(Entities entities) {
-        Direction direction = this.randomMove();
+        Direction direction = this.nextMove(entities);
         return this.targetLocation(direction)
             .map(sq -> entities.moveGhost(this, sq, direction));
     }
