@@ -1,6 +1,5 @@
 package nl.tudelft.jpacman.level;
 
-import io.reactivex.Flowable;
 import io.reactivex.Observable;
 import io.reactivex.ObservableTransformer;
 import io.reactivex.Scheduler;
@@ -12,6 +11,8 @@ import nl.tudelft.jpacman.board.Direction;
 import nl.tudelft.jpacman.npc.ghost.Ghost;
 
 import java.awt.event.KeyEvent;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 
@@ -25,20 +26,22 @@ public class Events {
      * @return a flowable that will provide move timing events for the specified ghost
      * with the same behaviour as the NpcMoveTaks in jpacman 7.
      */
-    public static Flowable<Integer> ghostMovementEvents(Ghost ghost, int index, Scheduler scheduler) {
-        Flowable<Long> intervals = Flowable.<Long>generate(em -> em.onNext(ghost.getInterval()))
-            .subscribeOn(scheduler);
-        return intervals
-            .concatMap(interval -> Flowable.defer(() -> Flowable.timer(interval, TimeUnit.MILLISECONDS, scheduler)))
-            .map(t -> index);
-    }
-
     public static Observable<Integer> ghostMovementEvents(Ghost ghost, int index) {
-        return ghostMovementEvents(ghost, index, Schedulers.computation()).toObservable();
+        return Observable.create(sub -> {
+            ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
+            Runnable ghostTask = new Runnable() {
+                @Override
+                public void run() {
+                    sub.onNext(index);
+                    long interval = ghost.getInterval();
+                    service.schedule(this, interval, TimeUnit.MILLISECONDS);
+                }
+            }; service.schedule(ghostTask,ghost.getInterval() / 2, TimeUnit.MILLISECONDS );
+        });
     }
 
     public static Observable<Function1<Entities, Option<Entities>>> allEntityEvents(Observable<KeyEvent> playerEvents, Entities initial) {
-        Observable<Function1<Entities, Option<Entities>>> playerMovements = playerEvents.compose(playerMovements());
+        Observable<Function1<Entities, Option<Entities>>> playerMovements = playerEvents.observeOn(Schedulers.computation()).compose(playerMovements());
         return Observable.merge(playerMovements, ghostMovements(initial.ghosts));
     }
 
