@@ -27,14 +27,7 @@ public class Level {
     private final Board board;
     private final AtomicReference<Entities> entities;
 
-    /**
-     * The lock that ensures starting and stopping can't interfere with each
-     * other.
-     */
-    private final Object startStopLock = new Object();
-
-    /**
-     * <code>true</code> iff this level is currently in progress, i.e. players
+    /*** <code>true</code> iff this level is currently in progress, i.e. players
      * and NPCs can movedTo.
      */
     private boolean inProgress;
@@ -102,13 +95,12 @@ public class Level {
      * NPCs.
      */
     public void start() {
-        synchronized (startStopLock) {
             if (isInProgress()) {
                 return;
             }
             inProgress = true;
             updateObservers();
-        }
+
     }
 
     /**
@@ -116,12 +108,10 @@ public class Level {
      * and stopping all NPCs.
      */
     public void stop() {
-        synchronized (startStopLock) {
             if (!isInProgress()) {
                 return;
             }
             inProgress = false;
-        }
     }
 
 
@@ -151,11 +141,11 @@ public class Level {
         }
     }
 
-    public Entities currentEntities() {
+    public synchronized Entities currentEntities() {
         return entities.get();
     }
 
-    public void setCurrentEntities(Entities entities) {
+    public synchronized void setCurrentEntities(Entities entities) {
         this.entities.set(entities);
     }
 

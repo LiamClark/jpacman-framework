@@ -2,7 +2,6 @@ package nl.tudelft.jpacman.level;
 
 import io.reactivex.Observable;
 import io.reactivex.ObservableTransformer;
-import io.reactivex.Scheduler;
 import io.reactivex.schedulers.Schedulers;
 import io.vavr.Function1;
 import io.vavr.collection.Vector;
@@ -41,8 +40,8 @@ public class Events {
     }
 
     public static Observable<Function1<Entities, Option<Entities>>> allEntityEvents(Observable<KeyEvent> playerEvents, Entities initial) {
-        Observable<Function1<Entities, Option<Entities>>> playerMovements = playerEvents.observeOn(Schedulers.computation()).compose(playerMovements());
-        return Observable.merge(playerMovements, ghostMovements(initial.ghosts));
+        Observable<Function1<Entities, Option<Entities>>> playerMovements = playerEvents.compose(playerMovements());
+        return Observable.merge(playerMovements, ghostMovements(initial.ghosts)).observeOn(Schedulers.io());
     }
 
     public static Observable<Function1<Entities, Option<Entities>>> ghostMovements(Vector<Ghost> ghosts) {

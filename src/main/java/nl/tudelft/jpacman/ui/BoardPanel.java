@@ -6,6 +6,7 @@ import java.awt.Graphics;
 
 import javax.swing.JPanel;
 
+import io.vavr.collection.Map;
 import io.vavr.collection.Vector;
 import nl.tudelft.jpacman.board.Board;
 import nl.tudelft.jpacman.board.Square;
@@ -81,14 +82,17 @@ class BoardPanel extends JPanel {
 
         graphics.setColor(BACKGROUND_COLOR);
         graphics.fillRect(0, 0, window.width, window.height);
+        Map<Square, Vector<Unit>> allOccupants = units.groupBy(u -> u.square);
+
 
         for (int y = 0; y < board.getHeight(); y++) {
             for (int x = 0; x < board.getWidth(); x++) {
                 int cellX = x * cellW;
                 int cellY = y * cellH;
                 Square square = board.squareAt(x, y);
-                Vector<Unit> occupants = units.filter(u -> u.square == square);
-                render(square, occupants, graphics, cellX, cellY, cellW, cellH);
+                Vector<Unit> currentOccupants = allOccupants.get(square).getOrElse(Vector::empty);
+
+                render(square, currentOccupants, graphics, cellX, cellY, cellW, cellH);
             }
         }
     }

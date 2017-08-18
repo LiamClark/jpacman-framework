@@ -113,7 +113,7 @@ public class PacManUI extends JFrame {
      * @return a cold infinite observable, with no respect for back pressure.
      */
     public Observable<KeyEvent> keyEvents() {
-        return Observable.create(sub -> {
+        Observable<KeyEvent> events = Observable.create(sub -> {
             addKeyListener(new KeyListener() {
                 @Override
                 public void keyPressed(KeyEvent e) {
@@ -131,6 +131,8 @@ public class PacManUI extends JFrame {
                 }
             });
         });
+
+        return events.observeOn(Schedulers.io());
     }
 
     /**
