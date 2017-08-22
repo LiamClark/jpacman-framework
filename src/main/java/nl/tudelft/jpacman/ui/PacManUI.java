@@ -132,7 +132,7 @@ public class PacManUI extends JFrame {
             });
         });
 
-        return events.observeOn(Schedulers.io());
+        return events.observeOn(Schedulers.computation());
     }
 
     public static Observable<Entities> startEvents(Level level, Observable<KeyEvent> keyEvents) {

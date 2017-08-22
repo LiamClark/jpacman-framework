@@ -17,8 +17,6 @@ import java.util.concurrent.TimeUnit;
 
 public class Events {
     /**
-     * Flowable is used here, because otherwise concat map will try to consume
-     * the entire infinite sequence.
      *
      * @param ghost the ghost to generate movement events for
      * @param index the index of the ghost in the entities vector
@@ -41,7 +39,7 @@ public class Events {
 
     public static Observable<Function1<Entities, Option<Entities>>> allEntityEvents(Observable<KeyEvent> playerEvents, Entities initial) {
         Observable<Function1<Entities, Option<Entities>>> playerMovements = playerEvents.compose(playerMovements());
-        return Observable.merge(playerMovements, ghostMovements(initial.ghosts)).observeOn(Schedulers.io());
+        return Observable.merge(playerMovements, ghostMovements(initial.ghosts));
     }
 
     public static Observable<Function1<Entities, Option<Entities>>> ghostMovements(Vector<Ghost> ghosts) {
