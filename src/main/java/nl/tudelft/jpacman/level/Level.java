@@ -141,11 +141,11 @@ public class Level {
         }
     }
 
-    public synchronized Entities currentEntities() {
+    public Entities currentEntities() {
         return entities.get();
     }
 
-    public synchronized void setCurrentEntities(Entities entities) {
+    public void setCurrentEntities(Entities entities) {
         this.entities.set(entities);
     }
 
