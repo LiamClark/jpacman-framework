@@ -126,32 +126,6 @@ public class Launcher {
         return new GhostFactory(getSpriteStore());
     }
 
-    /**
-     * @return A new factory using the sprites from {@link #getSpriteStore()}.
-     */
-    protected PlayerFactory getPlayerFactory() {
-        return new PlayerFactory(getSpriteStore());
-    }
-
-    /**
-     * Adds key events UP, DOWN, LEFT and RIGHT to a game.
-     *
-     * @param builder
-     *            The {@link PacManUiBuilder} that will provide the UI.
-     */
-    protected void addSinglePlayerKeys(final PacManUiBuilder builder) {
-        builder.addKey(KeyEvent.VK_UP, moveTowardsDirection(Direction.NORTH))
-                .addKey(KeyEvent.VK_DOWN, moveTowardsDirection(Direction.SOUTH))
-                .addKey(KeyEvent.VK_LEFT, moveTowardsDirection(Direction.WEST))
-                .addKey(KeyEvent.VK_RIGHT, moveTowardsDirection(Direction.EAST));
-    }
-
-    private Action moveTowardsDirection(Direction direction) {
-        return () -> {
-            assert game != null;
-            getGame().move(direction);
-        };
-    }
 
     /**
      * Creates and starts a JPac-Man game.
@@ -159,7 +133,6 @@ public class Launcher {
     public void launch() {
         makeGame();
         PacManUiBuilder builder = new PacManUiBuilder().withDefaultButtons();
-        addSinglePlayerKeys(builder);
         pacManUI = builder.build(getGame());
         pacManUI.start();
     }

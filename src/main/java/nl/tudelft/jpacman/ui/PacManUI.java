@@ -87,9 +87,6 @@ public class PacManUI extends JFrame {
 
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 
-        PacKeyListener keys = new PacKeyListener(keyMappings);
-        addKeyListener(keys);
-
         JPanel buttonPanel = new ButtonPanel(buttons, this);
 
         scorePanel = new ScorePanel(game.getPlayers());
