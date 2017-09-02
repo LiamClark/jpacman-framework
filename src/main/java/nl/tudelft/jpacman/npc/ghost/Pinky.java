@@ -7,6 +7,7 @@ import io.vavr.collection.Stream;
 import io.vavr.control.Option;
 import nl.tudelft.jpacman.board.Direction;
 import nl.tudelft.jpacman.board.Square;
+import nl.tudelft.jpacman.level.Entities;
 import nl.tudelft.jpacman.level.Player;
 import nl.tudelft.jpacman.sprite.Sprite;
 
@@ -92,8 +93,8 @@ public class Pinky extends Ghost {
      * </p>
      */
     @Override
-    public Direction nextMove() {
-        return Navigation.findNearest(Player.class, square)
+    public Direction nextMove(Entities entities) {
+        return Navigation.findNearest(Player.class, square, entities)
             .flatMap(player -> {
                 Square finalDestination = Stream.continually(player.direction)
                     .take(SQUARES_AHEAD)

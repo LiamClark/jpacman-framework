@@ -10,6 +10,7 @@ import io.vavr.control.Option;
 import nl.tudelft.jpacman.board.Direction;
 import nl.tudelft.jpacman.board.Square;
 import nl.tudelft.jpacman.board.Unit;
+import nl.tudelft.jpacman.level.Entities;
 
 /**
  * Navigation provides utility to nagivate on {@link Square}s.
@@ -84,7 +85,7 @@ public final class Navigation {
      *         such unit could be found.
      */
     public static <T extends  Unit> Option<T> findNearest(Class<T> type,
-                                             Square currentLocation) {
+                                             Square currentLocation, Entities entities) {
         ArrayList<Square> toDo = new ArrayList<>();
         Set<Square> visited = new HashSet<>();
 
@@ -92,7 +93,7 @@ public final class Navigation {
 
         while (!toDo.isEmpty()) {
             Square square = toDo.remove(0);
-            Option<T> unit = findUnit(type, square);
+            Option<T> unit = findUnit(type, square, entities);
             if (unit.isDefined()) {
                 return unit;
             }
@@ -114,8 +115,8 @@ public final class Navigation {
      * @return A unit of type T, iff such a unit occupies this square, or
      *         <code>null</code> of none does.
      */
-    public static <T extends Unit> Option<T> findUnit(Class<T> type, Square square) {
-        return Stream.ofAll(square.getOccupants()).find(type::isInstance).map(u -> (T) u);
+    public static <T extends Unit> Option<T> findUnit(Class<T> type, Square square, Entities entities) {
+        return entities.occupations.get().get(square).flatMap(units -> units.find(type::isInstance).map(u -> (T) u));
     }
 
     /**

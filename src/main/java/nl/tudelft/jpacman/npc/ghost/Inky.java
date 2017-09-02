@@ -10,6 +10,7 @@ import io.vavr.control.Option;
 import nl.tudelft.jpacman.board.Direction;
 import nl.tudelft.jpacman.board.Square;
 import nl.tudelft.jpacman.board.Unit;
+import nl.tudelft.jpacman.level.Entities;
 import nl.tudelft.jpacman.level.Player;
 import nl.tudelft.jpacman.sprite.Sprite;
 
@@ -101,11 +102,11 @@ public class Inky extends Ghost {
      */
     // CHECKSTYLE:OFF To keep this more readable.
     @Override
-    public Direction nextMove() {
+    public Direction nextMove(Entities entities) {
 
-        Option<Square> blinkyLocation = Navigation.findNearest(Blinky.class, square)
+        Option<Square> blinkyLocation = Navigation.findNearest(Blinky.class, square, entities)
             .map(u -> u.square);
-        Option<Player> player = Navigation.findNearest(Player.class, square);
+        Option<Player> player = Navigation.findNearest(Player.class, square, entities);
 
         return player.flatMap(p -> {
             Square playerDestination = p.square;

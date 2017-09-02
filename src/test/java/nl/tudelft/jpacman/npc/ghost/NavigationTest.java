@@ -109,42 +109,4 @@ class NavigationTest {
             .shortestPath(s1, s2, mock(Unit.class));
         assertThat(path.get()).containsExactly(Direction.EAST, Direction.SOUTH);
     }
-
-    /**
-     * Verifies that the nearest object is detected.
-     */
-    @Test
-    void testNearestUnit() {
-        Board b = parser
-            .apply(List.of("#####", "# ..#", "#####"))
-            .get()
-            .getBoard();
-        Square s1 = b.squareAt(1, 1);
-        Square s2 = b.squareAt(2, 1);
-        Option<Square> result = Navigation.findNearest(Pellet.class, s1).map(u -> u.square);
-        assertThat(result.get()).isEqualTo(s2);
-    }
-
-    /**
-     * Verifies that there is no such location if there is no nearest object.
-     */
-    @Test
-    void testNoNearestUnit() {
-        Board b = parser.apply(List.of(" ")).get().getBoard();
-        Square s1 = b.squareAt(0, 0);
-        Option<Pellet> unit = Navigation.findNearest(Pellet.class, s1);
-        assertThat(unit).isEmpty();
-    }
-
-    /**
-     * Verifies that there is ghost on the default board
-     * next to cell [1, 1].
-     */
-    @Test
-    void testFullSizedLevel() {
-        Board b = MapParser.resourceMapParser(defaultParser).apply("/board.txt").get().getBoard();
-        Square s1 = b.squareAt(1, 1);
-        Option<Ghost> unit = Navigation.findNearest(Ghost.class, s1);
-        assertThat(unit).isNotNull();
-    }
 }

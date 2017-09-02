@@ -10,6 +10,7 @@ import io.vavr.control.Option;
 import nl.tudelft.jpacman.board.Direction;
 import nl.tudelft.jpacman.board.Square;
 import nl.tudelft.jpacman.board.Unit;
+import nl.tudelft.jpacman.level.Entities;
 import nl.tudelft.jpacman.level.Player;
 import nl.tudelft.jpacman.sprite.Sprite;
 
@@ -104,8 +105,8 @@ public class Clyde extends Ghost {
      * </p>
      */
     @Override
-    public Direction nextMove() {
-        return Navigation.findNearest(Player.class, square)
+    public Direction nextMove(Entities entities) {
+        return Navigation.findNearest(Player.class, square, entities)
             .map(u -> u.square)
             .flatMap(target -> Navigation.shortestPath(square, target, this))
             .map(Stream::ofAll)

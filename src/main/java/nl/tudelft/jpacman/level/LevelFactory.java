@@ -126,7 +126,7 @@ public class LevelFactory {
         }
 
         @Override
-        public Direction nextMove() {
+        public Direction nextMove(Entities entities) {
             return randomMove();
         }
 

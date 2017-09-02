@@ -37,7 +37,7 @@ final class NpcMoveTask implements Runnable {
     @Override
     public void run() {
         Ghost ghost = level.getEntities().ghosts.get(ghostIndex);
-        Direction nextMove = ghost.nextMove();
+        Direction nextMove = ghost.nextMove(level.getEntities());
         if (nextMove != null) {
             level.move(ghost, nextMove);
         }
