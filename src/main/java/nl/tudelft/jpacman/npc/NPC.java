@@ -3,6 +3,7 @@ package nl.tudelft.jpacman.npc;
 import nl.tudelft.jpacman.board.Direction;
 import nl.tudelft.jpacman.board.MovableUnit;
 import nl.tudelft.jpacman.board.Square;
+import nl.tudelft.jpacman.level.Entities;
 
 /**
  * A non-player unit.
@@ -31,6 +32,6 @@ public abstract class NPC extends MovableUnit {
      * @return The direction to movedTo in, or <code>null</code> if no movedTo could
      *         be devised.
      */
-    public abstract Direction nextMove();
+    public abstract Direction nextMove(Entities entities);
 
 }

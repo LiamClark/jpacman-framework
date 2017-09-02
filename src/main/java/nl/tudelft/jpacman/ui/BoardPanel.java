@@ -6,6 +6,7 @@ import java.awt.Graphics;
 
 import javax.swing.JPanel;
 
+import io.vavr.collection.Map;
 import io.vavr.collection.Vector;
 import nl.tudelft.jpacman.board.Board;
 import nl.tudelft.jpacman.board.Square;
@@ -65,7 +66,7 @@ class BoardPanel extends JPanel {
     public void paint(Graphics g) {
         assert g != null;
         Level level = game.getLevel();
-        render(level.getBoard(),level.getAllUnits(), g, getSize());
+        render(level.getBoard(), level.getEntities().occupations.get(), g, getSize());
     }
 
     /**
@@ -75,20 +76,22 @@ class BoardPanel extends JPanel {
      * @param graphics The graphics context to draw on.
      * @param window   The dimensions to scale the rendered board to.
      */
-    private void render(Board board, Vector<Unit> units, Graphics graphics, Dimension window) {
+    private void render(Board board, Map<Square, Vector<Unit>> units, Graphics graphics, Dimension window) {
         int cellW = window.width / board.getWidth();
         int cellH = window.height / board.getHeight();
 
         graphics.setColor(BACKGROUND_COLOR);
         graphics.fillRect(0, 0, window.width, window.height);
 
+
         for (int y = 0; y < board.getHeight(); y++) {
             for (int x = 0; x < board.getWidth(); x++) {
                 int cellX = x * cellW;
                 int cellY = y * cellH;
                 Square square = board.squareAt(x, y);
-                Vector<Unit> occupants = units.filter(u -> u.square == square);
-                render(square, occupants, graphics, cellX, cellY, cellW, cellH);
+                Vector<Unit> currentOccupants = units.get(square).getOrElse(Vector::empty);
+
+                render(square, currentOccupants, graphics, cellX, cellY, cellW, cellH);
             }
         }
     }
@@ -104,7 +107,7 @@ class BoardPanel extends JPanel {
      * @param width    The width of this square (in pixels.)
      * @param height   The height of this square (in pixels.)
      */
-    private void render(Square square, Vector<Unit> occupants , Graphics graphics, int x, int y, int width, int height) {
+    private void render(Square square, Vector<Unit> occupants, Graphics graphics, int x, int y, int width, int height) {
         square.getSprite().draw(graphics, x, y, width, height);
         for (Unit unit : occupants) {
             unit.getSprite().draw(graphics, x, y, width, height);

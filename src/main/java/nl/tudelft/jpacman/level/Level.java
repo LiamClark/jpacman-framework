@@ -158,7 +158,7 @@ public class Level {
         for (final Ghost npc : Stream.ofAll(npcs.keySet())) {
             ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
 
-            service.schedule(new NpcMoveTask(service, npc),
+            service.schedule(new NpcMoveTask(this, service, npc),
                 npc.getInterval() / 2, TimeUnit.MILLISECONDS);
 
             npcs.put(npc, service);
@@ -231,45 +231,8 @@ public class Level {
         return entities.get().allUnits();
     }
 
-    /**
-     * A task that moves an NPC and reschedules itself after it finished.
-     *
-     * @author Jeroen Roosen
-     */
-    private final class NpcMoveTask implements Runnable {
-
-        /**
-         * The service executing the task.
-         */
-        private final ScheduledExecutorService service;
-
-        /**
-         * The NPC to movedTo.
-         */
-        private final Ghost npc;
-
-        /**
-         * Creates a new task.
-         *
-         * @param service
-         *            The service that executes the task.
-         * @param npc
-         *            The NPC to movedTo.
-         */
-        NpcMoveTask(ScheduledExecutorService service, Ghost npc) {
-            this.service = service;
-            this.npc = npc;
-        }
-
-        @Override
-        public void run() {
-            Direction nextMove = npc.nextMove();
-            if (nextMove != null) {
-                move(npc, nextMove);
-            }
-            long interval = npc.getInterval();
-            service.schedule(this, interval, TimeUnit.MILLISECONDS);
-        }
+    public Entities getEntities() {
+        return entities.get();
     }
 
     /**
