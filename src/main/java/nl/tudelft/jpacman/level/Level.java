@@ -110,13 +110,13 @@ public class Level {
         return Option.when(isInProgress() && targetSquare.isAccessibleTo(unit), targetSquare);
     }
     
-    public void move(Ghost ghost, Direction direction) {
+    public synchronized void move(Ghost ghost, Direction direction) {
         targetLocation(ghost, direction)
             .map(sq -> entities.get().moveGhost(ghost, sq, direction))
             .forEach(entities::set);
     }
 
-    public void movePlayer(Direction direction) {
+    public synchronized void movePlayer(Direction direction) {
         targetLocation(entities.get().player, direction)
             .map(sq -> entities.get().movePlayer(sq, direction))
             .forEach(entities::set);
