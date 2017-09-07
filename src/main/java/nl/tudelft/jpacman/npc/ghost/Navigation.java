@@ -55,6 +55,7 @@ public final class Navigation {
             if (square.equals(to)) {
                 return Option.of(node.getPath());
             }
+            System.out.println(visited.size());
             visited.add(square);
             addNewTargets(traveller, targets, visited, node, square);
         }

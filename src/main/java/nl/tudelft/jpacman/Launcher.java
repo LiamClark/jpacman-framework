@@ -1,25 +1,19 @@
 package nl.tudelft.jpacman;
 
-import java.awt.event.KeyEvent;
-import java.io.IOException;
-import java.util.List;
-
 import io.vavr.Function1;
 import io.vavr.control.Try;
 import nl.tudelft.jpacman.board.BoardFactory;
-import nl.tudelft.jpacman.board.Direction;
 import nl.tudelft.jpacman.game.Game;
 import nl.tudelft.jpacman.game.SinglePlayerGame;
 import nl.tudelft.jpacman.level.Level;
 import nl.tudelft.jpacman.level.LevelFactory;
 import nl.tudelft.jpacman.level.MapParser;
-import nl.tudelft.jpacman.level.Player;
-import nl.tudelft.jpacman.level.PlayerFactory;
 import nl.tudelft.jpacman.npc.ghost.GhostFactory;
 import nl.tudelft.jpacman.sprite.PacManSprites;
-import nl.tudelft.jpacman.ui.Action;
 import nl.tudelft.jpacman.ui.PacManUI;
 import nl.tudelft.jpacman.ui.PacManUiBuilder;
+
+import java.io.IOException;
 
 /**
  * Creates and launches the JPacMan UI.
@@ -92,7 +86,7 @@ public class Launcher {
      * @return A new map parser object using the factories from
      *         {@link #getLevelFactory()} and {@link #getBoardFactory()}.
      */
-    protected Function1<String, Try<Level>> getMapParser() {
+    public Function1<String, Try<Level>> getMapParser() {
         return MapParser.resourceMapParser(MapParser.characterMapParser(getBoardFactory(), getLevelFactory()));
     }
 
