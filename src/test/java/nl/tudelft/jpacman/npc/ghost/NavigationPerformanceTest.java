@@ -1,16 +1,25 @@
 package nl.tudelft.jpacman.npc.ghost;
 
+import io.vavr.collection.List;
+import io.vavr.collection.Stream;
+import io.vavr.control.Option;
 import nl.tudelft.jpacman.Launcher;
 import nl.tudelft.jpacman.board.Direction;
 import nl.tudelft.jpacman.board.Square;
 import nl.tudelft.jpacman.level.Entities;
 import nl.tudelft.jpacman.level.Level;
 import nl.tudelft.jpacman.level.LevelFactory;
+import nl.tudelft.jpacman.level.Player;
 import org.junit.jupiter.api.Test;
 
+import static nl.tudelft.jpacman.board.Direction.SOUTH;
+import static nl.tudelft.jpacman.board.Direction.WEST;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class NavigationPerformanceTest {
+    private final List<Direction> shortestPathNoTraveller = List.of(SOUTH, SOUTH, SOUTH, SOUTH, SOUTH, SOUTH, SOUTH, SOUTH, SOUTH, SOUTH, WEST, WEST, WEST);
+    private final List<Direction> shortestPathWithTraveller = List.of(SOUTH, SOUTH, SOUTH, SOUTH, SOUTH, SOUTH, WEST, WEST, SOUTH, SOUTH, SOUTH, SOUTH, WEST);
 
     @Test
     void inky_performance_issue() {
@@ -27,6 +36,25 @@ public class NavigationPerformanceTest {
 
         System.out.println(after - before);
     }
+    
+    @Test
+    void new_path_finding_algorithm() {
+        final Level level = new TestLauncher().getMapParser().apply("/ghostperformance.txt").get();
+        final Entities entities = level.currentEntities();
+        final Ghost inky = entities.ghosts.get(2);
+
+        final Player player = entities.player;
+
+        Square twoSquaresAheadOfPacman = Stream.continually(player.direction)
+            .take(2)
+            .foldRight(player.square, (direction, sq) -> sq.getSquareAt(direction));
+
+        final Ghost blink = entities.ghosts.get(0);
+        final Option<List<Direction>> astar = AStar.astar(blink.square, twoSquaresAheadOfPacman);
+        
+        assertThat(astar).containsExactly(shortestPathNoTraveller);
+    }
+  
 
     @Test
     void visual_map() throws InterruptedException {
