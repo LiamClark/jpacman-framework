@@ -37,7 +37,7 @@ public class AStar {
         while (!open.isEmpty()) {
             final Square current = cheapestOpenSquare(open, fscores);
             if(current.equals(to)) {
-                return Option.of(reconstruct_path(cameFrom, current));
+                return Option.of(reconstructPath(cameFrom, current));
             }
 
             open.remove(current);
@@ -46,13 +46,13 @@ public class AStar {
             final Array<Square> neighbours = directions.map(current::getSquareAt).filter(directionFilter.apply(closed));
             for (Square neighbour : neighbours) {
                 open.add(neighbour);
-                int tenativeGScore = gscores.getOrElse(current, Integer.MAX_VALUE) + 1;
+                int tentativeGScore = gscores.getOrElse(current, Integer.MAX_VALUE) + 1;
 
                 final Integer neighbourGscore = gscores.get(neighbour).getOrElse(Integer.MAX_VALUE);
-                if(tenativeGScore < neighbourGscore) {
+                if(tentativeGScore < neighbourGscore) {
                     cameFrom = cameFrom.put(neighbour, current);
-                    gscores = gscores.put(neighbour, tenativeGScore);
-                    fscores = fscores.put(neighbour,  tenativeGScore + neighbour.manhattanDistance(to));
+                    gscores = gscores.put(neighbour, tentativeGScore);
+                    fscores = fscores.put(neighbour, tentativeGScore + neighbour.manhattanDistance(to));
                 }
             }
         }
@@ -60,7 +60,7 @@ public class AStar {
         return Option.none();
     }
 
-    private static List<Direction> reconstruct_path(HashMap<Square, Square> cameFrom, Square current) {
+    private static List<Direction> reconstructPath(HashMap<Square, Square> cameFrom, Square current) {
         final List<Square> squares = squaresInPath(cameFrom, current).prepend(current);
         return squares.sliding(2)
             .filter(xs -> xs.size() == 2)
