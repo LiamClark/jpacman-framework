@@ -5,6 +5,7 @@ import io.vavr.collection.List;
 import io.vavr.collection.Stream;
 import io.vavr.control.Option;
 import io.vavr.control.Try;
+import nl.tudelft.jpacman.board.Board;
 import nl.tudelft.jpacman.board.BoardFactory;
 import nl.tudelft.jpacman.board.Direction;
 import nl.tudelft.jpacman.board.Square;
@@ -60,6 +61,13 @@ class AStarTest {
         final Ghost bottomGhost = entities.ghosts.get(0);
         assertThat(AStar.astarTraveller(entities.player.square, bottomGhost.square, entities.player).get())
             .isEqualTo(List.of(NORTH, NORTH, EAST, EAST, SOUTH, SOUTH));
+    }
+
+    @Test
+    void no_path_test() {
+        final Board board = level.getBoard();
+        final Option<List<Direction>> nonExistentPath = AStar.astarTraveller(board.squareAt(0, 0), board.squareAt(0, 1), level.currentEntities().player);
+        assertThat(nonExistentPath).isEmpty();
     }
 
 
