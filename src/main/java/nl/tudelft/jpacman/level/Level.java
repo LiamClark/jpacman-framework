@@ -1,5 +1,6 @@
 package nl.tudelft.jpacman.level;
 
+import io.reactivex.Observable;
 import io.vavr.Function1;
 import io.vavr.collection.List;
 import io.vavr.collection.Vector;
@@ -8,6 +9,7 @@ import nl.tudelft.jpacman.board.Board;
 import nl.tudelft.jpacman.board.Unit;
 import nl.tudelft.jpacman.npc.ghost.Ghost;
 
+import java.awt.event.KeyEvent;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
@@ -49,6 +51,14 @@ public class Level {
         this.inProgress = false;
         this.entities = new AtomicReference<>(new Entities(pellets, ghosts.toVector(), player));
         this.observers = new HashSet<>();
+    }
+
+    public Observable<Entities> startEvents(Observable<KeyEvent> keyEvents) {
+        Entities initialEntities = currentEntities();
+        Observable<Function1<Entities, Option<Entities>>> entityEvents =
+            Events.allEntityEvents(keyEvents, initialEntities);
+
+        return entityEvents.scan(initialEntities, this::entityOperation);
     }
 
     /**

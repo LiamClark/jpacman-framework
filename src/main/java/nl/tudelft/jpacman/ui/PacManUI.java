@@ -15,12 +15,8 @@ import javax.swing.WindowConstants;
 
 import io.reactivex.Observable;
 import io.reactivex.schedulers.Schedulers;
-import io.vavr.Function1;
-import io.vavr.control.Option;
 import nl.tudelft.jpacman.game.Game;
 import nl.tudelft.jpacman.level.Entities;
-import nl.tudelft.jpacman.level.Events;
-import nl.tudelft.jpacman.level.Level;
 import nl.tudelft.jpacman.ui.ScorePanel.ScoreFormatter;
 
 /**
@@ -132,24 +128,14 @@ public class PacManUI extends JFrame {
         return events.observeOn(Schedulers.computation());
     }
 
-    public static Observable<Entities> startEvents(Level level, Observable<KeyEvent> keyEvents) {
-        Entities initialEntities = level.currentEntities();
-        Observable<Function1<Entities, Option<Entities>>> entityEvents =
-            Events.allEntityEvents(keyEvents, initialEntities);
-
-        return entityEvents.scan(initialEntities, level::entityOperation);
-    }
-
     /**
      * Starts the "engine", the thread that redraws the interface at set
      * intervals.
      */
     public void start() {
-        Observable<Entities> states = startEvents(game.getLevel(), this.keyEvents());
+        Observable<Entities> states = game.getLevel().startEvents(this.keyEvents());
 
-        states
-            .doOnNext(e -> System.out.println("entities updates" + e))
-            .subscribe(game.getLevel()::setCurrentEntities);
+        states.subscribe(game.getLevel()::setCurrentEntities);
 
         setVisible(true);
         ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
