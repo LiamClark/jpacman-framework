@@ -8,14 +8,25 @@ import io.vavr.collection.Map;
 import io.vavr.control.Option;
 import nl.tudelft.jpacman.board.Direction;
 import nl.tudelft.jpacman.board.Square;
+import nl.tudelft.jpacman.board.Unit;
 
 import java.util.HashSet;
+import java.util.function.Function;
+import java.util.function.Predicate;
 
 
 public class AStar {
     private static final Array<Direction> directions = Array.of(Direction.values());
-    
+
     public static Option<List<Direction>> astar(Square from, Square to) {
+        return astartInner(from, to, closed -> sq -> !closed.contains(sq));
+    }
+
+    public static Option<List<Direction>> astarTraveller(Square from, Square to, Unit traveller) {
+        return astartInner(from, to, closed -> sq -> !closed.contains(sq) && sq.isAccessibleTo(traveller));
+    }
+    
+    public static Option<List<Direction>> astartInner(Square from, Square to, Function<HashSet<Square>,Predicate<Square>> directionFilter) {
         final HashSet<Square> closed = new HashSet<>();
         final HashSet<Square> open = new HashSet<>();
         open.add(from);
@@ -28,11 +39,11 @@ public class AStar {
             if(current.equals(to)) {
                 return Option.of(reconstruct_path(cameFrom, current));
             }
-            
+
             open.remove(current);
             closed.add(current);
 
-            final Array<Square> neighbours = directions.map(current::getSquareAt).filter(sq -> !closed.contains(sq));
+            final Array<Square> neighbours = directions.map(current::getSquareAt).filter(directionFilter.apply(closed));
             for (Square neighbour : neighbours) {
                 open.add(neighbour);
                 int tenativeGScore = gscores.getOrElse(current, Integer.MAX_VALUE) + 1;
@@ -45,13 +56,17 @@ public class AStar {
                 }
             }
         }
-        
+
         return Option.none();
     }
 
     private static List<Direction> reconstruct_path(HashMap<Square, Square> cameFrom, Square current) {
-        final List<Square> squares = squaresInPath(cameFrom, current);
-        return squares.sliding(2).map(sq -> sq.get(1).directionForNeighbour(sq.get(0))).toList().flatMap(Option::toList);
+        final List<Square> squares = squaresInPath(cameFrom, current).prepend(current);
+        return squares.sliding(2)
+            .filter(xs -> xs.size() == 2)
+            .map(sq -> sq.get(1).directionForNeighbour(sq.get(0))).toList()
+            .flatMap(Option::toList)
+            .reverse();
     }
     
     private static List<Square> squaresInPath(HashMap<Square, Square> cameFrom, Square current) {
@@ -69,6 +84,4 @@ public class AStar {
     private static Map<Square, Integer> fscores(Square from, Square to) {
         return HashMap.of(from, from.manhattanDistance(to));
     }
-    
-
 }

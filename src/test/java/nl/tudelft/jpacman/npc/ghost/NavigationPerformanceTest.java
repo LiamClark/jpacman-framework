@@ -39,6 +39,7 @@ public class NavigationPerformanceTest {
     }
 
     @Test
+    @Disabled
     void new_path_finding_algorithm() {
         final Level level = new TestLauncher().getMapParser().apply("/ghostperformance.txt").get();
         final Entities entities = level.currentEntities();
@@ -50,13 +51,13 @@ public class NavigationPerformanceTest {
 
         final Ghost blink = entities.ghosts.get(0);
         for (int i = 0; i < 500; i++) {
-            final Option<List<Direction>> astar = AStar.astar(blink.square, twoSquaresAheadOfPacman);
+            final Option<List<Direction>> astar = AStar.astarTraveller(blink.square, twoSquaresAheadOfPacman, blink);
+            assertThat(astar.get()).hasSize(shortestPathWithTraveller.size());
         }
-
-//        assertThat(astar).containsExactly(shortestPathNoTraveller);
     }
 
     @Test
+    @Disabled
     void old_path_finding_algorithm() {
         final Level level = new TestLauncher().getMapParser().apply("/ghostperformance.txt").get();
         final Entities entities = level.currentEntities();
@@ -69,9 +70,9 @@ public class NavigationPerformanceTest {
         final Ghost blink = entities.ghosts.get(0);
         for (int i = 0; i < 500; i++) {
             final Option<List<Direction>> astar = Navigation.shortestPath(blink.square, twoSquaresAheadOfPacman, null);
+            assertThat(astar).containsExactly(shortestPathNoTraveller);
         }
 
-//        assertThat(astar).containsExactly(shortestPathNoTraveller);
     }
 
     @Test
@@ -82,7 +83,7 @@ public class NavigationPerformanceTest {
     }
 
 
-    class TestLauncher extends Launcher {
+    public static class TestLauncher extends Launcher {
         @Override
         protected LevelFactory getLevelFactory() {
             return new LevelFactory(getSpriteStore(), getGhostFactory()) {

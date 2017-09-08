@@ -81,8 +81,7 @@ public class Blinky extends Ghost {
         // TODO Implement his actual behaviour instead of simply chasing.
         return Navigation.findNearest(Player.class, square, entities)
             .map(u -> u.square)
-            //traveler was this
-            .flatMap(target -> AStar.astar(square, target))
+            .flatMap(target -> AStar.astarTraveller(square, target, this))
             .map(Stream::ofAll)
             .flatMap(Stream::headOption).getOrElse(randomMove());
     }

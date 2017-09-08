@@ -114,8 +114,7 @@ public class Inky extends Ghost {
 
             return blinkyLocation.flatMap(b -> AStar.astar(b, twoSquaresAheadOfPacman))
                 .map(dirs -> Stream.ofAll(dirs).foldRight(playerDestination, (direction, sq) -> sq.getSquareAt(direction)))
-                //traveler was this
-                .flatMap(dest -> (AStar.astar(square, dest)))
+                .flatMap(dest -> AStar.astarTraveller(square, dest, this))
                 .map(Vector::ofAll)
                 .flatMap(Vector::headOption);
         }).getOrElse(randomMove());
