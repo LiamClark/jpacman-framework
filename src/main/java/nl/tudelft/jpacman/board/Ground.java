@@ -20,7 +20,8 @@ public final class Ground extends Square {
      * @param sprite
      *            The background for the square.
      */
-    Ground(Sprite sprite) {
+    Ground(Sprite sprite, int x, int y) {
+        super(x, y);
         this.background = sprite;
     }
 

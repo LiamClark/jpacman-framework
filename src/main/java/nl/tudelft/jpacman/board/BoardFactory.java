@@ -63,8 +63,8 @@ public class BoardFactory {
      *
      * @return A new square that can be occupied by any unit.
      */
-    public Square createGround() {
-        return new Ground(sprites.getGroundSprite());
+    public Square createGround(int x, int y) {
+        return new Ground(sprites.getGroundSprite(), x, y);
     }
 
     /**
@@ -72,8 +72,8 @@ public class BoardFactory {
      *
      * @return A new square that cannot be occupied by any unit.
      */
-    public Square createWall() {
-        return new Wall(sprites.getWallSprite());
+    public Square createWall(int x, int y) {
+        return new Wall(sprites.getWallSprite(), x, y);
     }
 
     /**
@@ -94,7 +94,8 @@ public class BoardFactory {
          * @param sprite
          *            The background for the square.
          */
-        Wall(Sprite sprite) {
+        Wall(Sprite sprite, int x, int y) {
+            super(x, y);
             this.background = sprite;
         }
 

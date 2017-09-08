@@ -1,9 +1,6 @@
 package nl.tudelft.jpacman.board;
 
-import io.vavr.Function1;
-import io.vavr.Predicates;
 import io.vavr.collection.Array;
-import nl.tudelft.jpacman.level.Pellet;
 
 import java.util.Objects;
 
@@ -13,6 +10,10 @@ import java.util.Objects;
  * @author Jeroen Roosen 
  */
 public class Board {
+
+    public Array<Array<Square>> getBoard() {
+        return board;
+    }
 
     /**
      * The grid of squares with board[x][y] being the square at column x, row y.

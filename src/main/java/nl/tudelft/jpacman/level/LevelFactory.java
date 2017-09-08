@@ -43,7 +43,7 @@ public class LevelFactory {
     /**
      * The factory providing ghosts.
      */
-    private final GhostFactory ghostFact;
+    public final GhostFactory ghostFact;
 
     /**
      * Creates a new level factory.
@@ -77,7 +77,7 @@ public class LevelFactory {
      *
      * @return The new ghost.
      */
-    Ghost createGhost(Square square) {
+    public Ghost createGhost(Square square) {
         ghostIndex++;
         ghostIndex %= GHOSTS;
         switch (ghostIndex) {

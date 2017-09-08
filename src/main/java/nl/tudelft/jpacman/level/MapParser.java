@@ -23,9 +23,8 @@ public interface MapParser<T> extends Function1<T, Try<Level>> {
             @Override
             public Try<Level> apply(List<List<Character>> chars) {
                 return Try.ofCallable(() -> {
-                    Function1<Character, Tuple4<Square, List<Ghost>, List<Pellet>, Option<Player>>> squareForChar =
-                        Function3.of(this::squareForCharWriter).apply(boardFactory).apply(levelFactory);
-                    List<List<Tuple4<Square, List<Ghost>, List<Pellet>, Option<Player>>>> squares = chars.map(row -> row.map(squareForChar));
+                    List<List<Tuple4<Square, List<Ghost>, List<Pellet>, Option<Player>>>> squares = 
+                        chars.zipWithIndex().map(row -> row._1.zipWithIndex().map(indexedChar -> squareForChar(boardFactory, levelFactory, row._2, indexedChar._2, indexedChar._1)));
 
                     Tuple3<List<Ghost>, List<Pellet>, Option<Player>> positions = squares.flatMap(Function.identity())
                         .map(a -> Tuple.of(a._2, a._3, a._4))
@@ -40,22 +39,22 @@ public interface MapParser<T> extends Function1<T, Try<Level>> {
         };
     }
 
-    default Tuple4<Square, List<Ghost>, List<Pellet>, Option<Player>> squareForCharWriter(BoardFactory boardCreator, LevelFactory levelCreator, char c) {
+    default Tuple4<Square, List<Ghost>, List<Pellet>, Option<Player>> squareForChar(BoardFactory boardCreator, LevelFactory levelCreator, int x, int y, char c) {
         switch (c) {
             case ' ':
-                return justGround(boardCreator.createGround());
+                return justGround(boardCreator.createGround(x, y));
             case '#':
-                return justGround(boardCreator.createWall());
+                return justGround(boardCreator.createWall(x, y));
             case '.':
-                Square pelletSquare = boardCreator.createGround();
+                Square pelletSquare = boardCreator.createGround(x, y);
                 Pellet pellet = levelCreator.createPellet(pelletSquare);
                 return Tuple.of(pelletSquare, List.empty(), List.of(pellet), Option.none());
             case 'G':
-                Square square = boardCreator.createGround();
+                Square square = boardCreator.createGround(x, y);
                 Ghost ghost = levelCreator.createGhost(square);
                 return Tuple.of(square, List.of(ghost), List.empty(), Option.none());
             case 'P':
-                Square ground = boardCreator.createGround();
+                Square ground = boardCreator.createGround(x, y);
                 Player p = new PlayerFactory(new PacManSprites()).createPacMan(ground, Direction.EAST);
                 return Tuple.of(ground, List.empty(), List.empty(), Option.of(p));
             default:

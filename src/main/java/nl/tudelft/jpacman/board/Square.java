@@ -1,13 +1,11 @@
 package nl.tudelft.jpacman.board;
 
-import java.util.ArrayList;
-import java.util.EnumMap;
-import java.util.List;
-import java.util.Map;
-
-import com.google.common.collect.ImmutableList;
-
+import io.vavr.collection.Stream;
+import io.vavr.control.Option;
 import nl.tudelft.jpacman.sprite.Sprite;
+
+import java.util.EnumMap;
+import java.util.Map;
 
 /**
  * A square on a {@link Board}, which can (or cannot, depending on the type) be
@@ -16,7 +14,8 @@ import nl.tudelft.jpacman.sprite.Sprite;
  * @author Jeroen Roosen 
  */
 public abstract class Square {
-
+    final int x;
+    final int y;
     /**
      * The collection of squares adjacent to this square.
      */
@@ -24,8 +23,12 @@ public abstract class Square {
 
     /**
      * Creates a new, empty square.
+     * @param x
+     * @param y
      */
-    protected Square() {
+    protected Square(int x, int y) {
+        this.x = x;
+        this.y = y;
         this.neighbours = new EnumMap<>(Direction.class);
     }
 
@@ -68,5 +71,14 @@ public abstract class Square {
      * @return The sprite of this square.
      */
     public abstract Sprite getSprite();
+    
+    public int manhattanDistance(Square other) {
+        return Math.abs(this.x - other.x) + Math.abs(this.y - other.y);
+    }
 
+    public Option<Direction> directionForNeighbour(Square neighbour) {
+        return Stream.ofAll(neighbours.entrySet())
+            .find(e -> e.getValue().equals(neighbour))
+            .map(Map.Entry::getKey);
+    }
 }

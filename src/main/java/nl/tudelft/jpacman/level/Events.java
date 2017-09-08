@@ -2,9 +2,10 @@ package nl.tudelft.jpacman.level;
 
 import io.reactivex.Observable;
 import io.reactivex.ObservableTransformer;
-import io.reactivex.schedulers.Schedulers;
+import io.reactivex.disposables.Disposables;
 import io.vavr.Function1;
 import io.vavr.collection.Vector;
+import io.vavr.control.Either;
 import io.vavr.control.Option;
 import nl.tudelft.jpacman.board.Direction;
 import nl.tudelft.jpacman.npc.ghost.Ghost;
@@ -25,7 +26,7 @@ public class Events {
      */
     public static Observable<Integer> ghostMovementEvents(Ghost ghost, int index) {
         return Observable.create(sub -> {
-            ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
+            ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor(r -> new Thread(r, ghost.getClass().getSimpleName()));
             Runnable ghostTask = new Runnable() {
                 @Override
                 public void run() {
@@ -34,6 +35,8 @@ public class Events {
                     service.schedule(this, interval, TimeUnit.MILLISECONDS);
                 }
             }; service.schedule(ghostTask,ghost.getInterval() / 2, TimeUnit.MILLISECONDS );
+
+            sub.setDisposable(Disposables.fromAction(service::shutdown));
         });
     }
 
